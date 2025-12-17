@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Search, History, Heart, ShoppingBag, CheckSquare, HelpCircle, User, LogIn, Bell, Box, LogOut } from "lucide-react";
 import { Notification } from "@/lib/types";
+import { supabase } from "@/lib/supabase";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
 interface HeaderProps {
   activeTab: string;
@@ -14,11 +16,37 @@ interface HeaderProps {
 }
 
 export function Header({ activeTab, onTabChange, notifications, onClearNotifications, onNavigateToComplete }: HeaderProps) {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const handleLogin = () => setIsLoggedIn(true);
-  const handleLogout = () => setIsLoggedIn(false);
+  useEffect(() => {
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogin = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'discord',
+      options: {
+        redirectTo: `${window.location.origin}/`,
+      },
+    });
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <header className="flex flex-col w-full bg-sidebar border-b border-border">
@@ -72,11 +100,17 @@ export function Header({ activeTab, onTabChange, notifications, onClearNotificat
               </PopoverContent>
             </Popover>
 
-            {isLoggedIn ? (
+            {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white h-auto p-0 ml-2">
-                    <User className="h-4 w-4" />
+                  <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white h-auto p-0 ml-2 gap-2">
+                    {/* User Avatar */}
+                    {user.user_metadata.avatar_url ? (
+                      <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-6 h-6 rounded-full" />
+                    ) : (
+                      <User className="h-4 w-4" />
+                    )}
+                    <span className="text-xs font-bold">{user.user_metadata.full_name || user.email?.split('@')[0]}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-[#222] border-[#3d3d3d] text-white" align="end">
@@ -94,7 +128,7 @@ export function Header({ activeTab, onTabChange, notifications, onClearNotificat
                 onClick={handleLogin}
               >
                 <LogIn className="h-4 w-4" />
-                <span className="text-xs">로그인</span>
+                <span className="text-xs">Discord 로그인</span>
               </Button>
             )}
 
