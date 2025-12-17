@@ -5,10 +5,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, AlertCircle, Package } from "lucide-react";
-import { MOCK_ITEMS } from "@/lib/constants";
+import { Item } from "@/lib/types";
 
-export function ItemTable() {
-  const [items, setItems] = useState(MOCK_ITEMS);
+interface ItemTableProps {
+  items: Item[];
+  onPurchaseRequest: (id: number) => void;
+}
+
+export function ItemTable({ items, onPurchaseRequest }: ItemTableProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
 
@@ -32,9 +36,7 @@ export function ItemTable() {
 
   const handlePurchaseRequest = () => {
     if (selectedId) {
-      setItems(prev => prev.map(item =>
-        item.id === selectedId ? { ...item, status: "거래대기중" } : item
-      ));
+      onPurchaseRequest(selectedId);
       setIsPurchaseDialogOpen(false);
       setSelectedId(null);
     }
@@ -94,7 +96,7 @@ export function ItemTable() {
                       {item.isNew && (
                         <span className="absolute top-0 left-0 bg-[#65a30d] text-[8px] text-white px-0.5 leading-none">W</span>
                       )}
-                      {item.level > 0 && (
+                      {(item.level ?? 0) > 0 && (
                         <span className="absolute bottom-0 right-0 text-[9px] text-yellow-500 font-bold drop-shadow-md">Lv.{item.level}</span>
                       )}
                     </div>

@@ -1,12 +1,18 @@
 import { Button } from "@/components/ui/button";
-import { Search, History, Heart, ShoppingBag, CheckSquare, HelpCircle, User, StopCircle } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Search, History, Heart, ShoppingBag, CheckSquare, HelpCircle, User, StopCircle, Bell, Box } from "lucide-react";
+import { Notification } from "@/lib/types";
 
 interface HeaderProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  notifications: Notification[];
+  onClearNotifications: () => void;
 }
 
-export function Header({ activeTab, onTabChange }: HeaderProps) {
+export function Header({ activeTab, onTabChange, notifications, onClearNotifications }: HeaderProps) {
+  const unreadCount = notifications.filter(n => !n.read).length;
+
   return (
     <header className="flex flex-col w-full bg-sidebar border-b border-border">
       {/* Top Bar with Logo and User Stats */}
@@ -26,8 +32,39 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
           <div className="flex items-center gap-2 bg-[#2a2a2a] px-3 py-1 rounded border border-[#3d3d3d]">
             <span className="text-yellow-500 font-bold">254,048,586</span>
           </div>
+
           <div className="flex items-center gap-2 text-gray-400">
-            <User className="h-4 w-4" />
+            {/* Notification Popover */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative text-gray-400 hover:text-white">
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full border-2 border-[#1a1a1a]" />
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 bg-[#222] border-[#3d3d3d] text-white p-0" align="end">
+                <div className="p-3 border-b border-[#3d3d3d] flex justify-between items-center">
+                  <span className="font-bold">알림 ({unreadCount})</span>
+                  <Button variant="ghost" size="sm" onClick={onClearNotifications} className="text-xs h-6 text-gray-400">지우기</Button>
+                </div>
+                <div className="max-h-[300px] overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500 text-sm">새로운 알림이 없습니다.</div>
+                  ) : (
+                    notifications.map((notif) => (
+                      <div key={notif.id} className="p-3 border-b border-[#333] hover:bg-[#2a2a2a] text-sm">
+                        <div className="text-gray-200">{notif.message}</div>
+                        <div className="text-xs text-gray-500 mt-1">{notif.timestamp}</div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <User className="h-4 w-4 ml-2" />
             <StopCircle className="h-4 w-4" />
             <HelpCircle className="h-4 w-4" />
             <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white h-auto p-0 ml-2">
@@ -40,6 +77,7 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
       {/* Navigation Tabs */}
       <div className="flex items-end px-4 gap-1 bg-[#2a2a2a] border-b border-[#3d3d3d] pt-2">
         <NavTab label="검색" tabId="search" icon={<Search className="h-4 w-4" />} activeTab={activeTab} onClick={onTabChange} />
+        <NavTab label="내 아이템" tabId="myitems" icon={<Box className="h-4 w-4" />} activeTab={activeTab} onClick={onTabChange} />
         <NavTab label="시세" tabId="market" icon={<History className="h-4 w-4" />} activeTab={activeTab} onClick={onTabChange} />
         <NavTab label="찜목록" tabId="wishlist" icon={<Heart className="h-4 w-4" />} activeTab={activeTab} onClick={onTabChange} />
         <NavTab label="판매" tabId="sell" icon={<ShoppingBag className="h-4 w-4" />} activeTab={activeTab} onClick={onTabChange} />

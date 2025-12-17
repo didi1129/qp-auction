@@ -19,7 +19,13 @@ const GAME_ITEMS = [
   { id: 110, name: "아담antium", category: "기타", basicPrice: 3000 },
 ];
 
-export function SellTab() {
+import { Item } from "@/lib/types";
+
+interface SellTabProps {
+  onRegister: (item: Item) => void;
+}
+
+export function SellTab({ onRegister }: SellTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedItem, setSelectedItem] = useState<(typeof GAME_ITEMS)[0] | null>(null);
   const [price, setPrice] = useState("");
@@ -30,6 +36,22 @@ export function SellTab() {
 
   const handleRegister = () => {
     if (!selectedItem || !price) return;
+
+    const newItem: Item = {
+      id: Date.now(), // Generate unique ID
+      name: selectedItem.name,
+      category: selectedItem.category,
+      price: Number(price),
+      basicPrice: selectedItem.basicPrice,
+      count: 1,
+      timeLeft: "24시간 00분",
+      isNew: true,
+      seller: "나",
+      status: "판매중",
+      image: "/placeholder-new.png"
+    };
+
+    onRegister(newItem);
     alert(`${selectedItem.name}이(가) ${Number(price).toLocaleString()} 메소에 24시간 동안 등록되었습니다.`);
     setSelectedItem(null);
     setPrice("");
