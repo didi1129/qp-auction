@@ -10,6 +10,7 @@ import { MOCK_ITEMS } from "@/lib/constants";
 import { Item, Notification } from "@/lib/types";
 
 import { CompleteTab } from "@/components/CompleteTab";
+import { MarketPriceTab } from "@/components/MarketPriceTab";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("search");
@@ -96,6 +97,8 @@ export default function Home() {
         <SellTab onRegister={handleRegisterItem} />
       ) : activeTab === "myitems" ? (
         <MyItemsTab items={items} onAcceptTrade={handleAcceptTrade} />
+      ) : activeTab === "market" ? (
+        <MarketPriceTab items={items} />
       ) : activeTab === "search" ? (
         <div className="flex flex-1 overflow-hidden">
           <Sidebar />
