@@ -7,24 +7,16 @@ import { Package, CheckCircle } from "lucide-react";
 interface MyItemsTabProps {
   items: Item[];
   onAcceptTrade: (itemId: number) => void;
+  currentUserDiscordId?: string;
 }
 
-export function MyItemsTab({ items, onAcceptTrade }: MyItemsTabProps) {
+export function MyItemsTab({ items, onAcceptTrade, currentUserDiscordId }: MyItemsTabProps) {
   // Filter items where I am the buyer (requested)
-  // For demo: items with status '거래대기중' (simulating I requested them) OR items explicitly marked as buyer='나'
-  // Let's assume for this demo, any item I 'Buy' in ItemTable gets status '거래대기중'.
-  // But wait, if *I* bought it, I want to see it here.
-  // And if *I* am selling it, and someone else bought it, I also see it here?
-  // Let's split into "구매 진행 중" (Buying) and "판매 진행 중" (Selling).
+  // For now, sticking to status check. In future, we should track requester ID.
+  const myRequests = items.filter(i => i.status === "거래대기중" || i.status === "거래중" || (i.status === "판매완료" && i.buyer_discord_id === currentUserDiscordId));
 
-  // For the demo purpose:
-  // "Buying": Items with status '거래대기중' or '거래중' or '판매완료' (if buyer is me).
-  // "Selling": Items where seller is '나' (added via SellTab).
-
-  const myRequests = items.filter(i => i.status === "거래대기중" || i.status === "거래중" || i.status === "판매완료");
-  // In a real app, we'd check i.buyer === 'me'.
-
-  const mySales = items.filter(i => i.seller === "나"); // Items added by me
+  // My Sales: Items where I am the seller
+  const mySales = items.filter(i => i.seller_discord_id === currentUserDiscordId);
 
   return (
     <div className="flex flex-1 gap-4 p-4 bg-[#222] text-white overflow-hidden h-full">
@@ -84,11 +76,16 @@ export function MyItemsTab({ items, onAcceptTrade }: MyItemsTabProps) {
           ) : (
             mySales.map(item => (
               <div key={item.id} className="bg-[#2a2a2a] p-3 mb-2 rounded border border-[#333] flex justify-between items-center">
-                <div className="flex items-col">
+                <div className="flex flex-col">
                   <span className="font-bold">{item.name}</span>
                   <span className="text-xs text-gray-400">{Number(item.price).toLocaleString()} 메소</span>
                 </div>
-                <span className="text-xs bg-[#333] px-2 py-1 rounded">{item.status}</span>
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-xs bg-[#333] px-2 py-1 rounded">{item.status}</span>
+                  {item.status === '판매완료' && item.buyer && (
+                    <span className="text-xs text-gray-400">구매자: {item.buyer}</span>
+                  )}
+                </div>
               </div>
             ))
           )}

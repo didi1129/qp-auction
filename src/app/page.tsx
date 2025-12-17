@@ -14,6 +14,8 @@ import { supabase } from "@/lib/supabase";
 import { CompleteTab } from "@/components/CompleteTab";
 import { MarketPriceTab } from "@/components/MarketPriceTab";
 
+import { User } from "@supabase/supabase-js";
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState("search");
 
@@ -22,29 +24,114 @@ export default function Home() {
 
   // Supabase Fetching
   const [isLoaded, setIsLoaded] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [completionItemId, setCompletionItemId] = useState<number | null>(null);
+  const [searchCriteria, setSearchCriteria] = useState<{ category: string; keyword: string } | null>(null);
 
+  // Auth & Notifications Logic
+  useEffect(() => {
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Poll for notifications
+  useEffect(() => {
+    if (!user) {
+      setNotifications([]);
+      return;
+    }
+
+    const discordId = user.identities?.find((id: any) => id.provider === 'discord')?.id;
+    if (!discordId) return;
+
+    const fetchNotifications = async () => {
+      // Use user.id for RLS-compatible querying
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('target_user_id', user.id) // Query by UUID
+        .order('created_at', { ascending: false });
+
+      if (data) {
+        const mappedNotifs: Notification[] = data.map((n: any) => ({
+          id: n.id.toString(),
+          message: n.message,
+          timestamp: new Date(n.created_at).toLocaleTimeString(),
+          read: n.is_read,
+          itemId: n.item_id,
+          type: n.result_code === 'trade_request' ? 'trade_request' :
+            n.result_code === 'trade_accept' ? 'trade_accept' :
+              n.result_code === 'trade_declined' ? 'trade_declined' :
+                n.result_code === 'trade_complete' ? 'trade_completed' : undefined
+        }));
+        setNotifications(mappedNotifs);
+      }
+    };
+
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 5000); // Poll every 5s
+    return () => clearInterval(interval);
+  }, [user]);
+
+  // Fetch Items
   useEffect(() => {
     const fetchItems = async () => {
-      const { data, error } = await supabase.from('market_listings').select('*');
+      const { data, error } = await supabase
+        .from('market_listings')
+        .select('*')
+        .order('created_at', { ascending: false });
+
       if (error) {
         console.error("Error fetching items:", error);
       } else if (data && data.length > 0) {
         // Map backend view structure to Frontend Item type
-        const mappedItems: Item[] = data.map((item: any) => ({
-          id: item.market_id, // Map market_id to id
-          name: item.name,
-          price: item.price,
-          level: 0, // Default or fetch if available in view
-          category: item.category,
-          count: item.count,
-          timeLeft: item.timeLeft,
-          isNew: item.isNew,
-          image: item.image,
-          seller: item.seller,
-          status: item.status,
-          // Add other fields if present in View
-          // item_gender, item_source etc can be ignored or added to Item type if needed
-        }));
+        const mappedItems: Item[] = data.map((item: any) => {
+          // Calculate time left (24 hours from created_at)
+          const createdAt = new Date(item.created_at);
+          const expireTime = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000);
+          const now = new Date();
+          const diffMs = expireTime.getTime() - now.getTime();
+
+          let timeLeftStr = "만료됨";
+          if (diffMs > 0) {
+            const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            timeLeftStr = `${diffHrs}시간 ${diffMins}분`;
+          } else {
+            timeLeftStr = "0분";
+          }
+
+          return {
+            id: item.market_id, // Map market_id to id
+            name: item.name,
+            price: item.price,
+            level: 0, // Default or fetch if available in view
+            category: item.category,
+            count: item.count,
+            timeLeft: timeLeftStr,
+            isNew: item.isNew,
+            image: item.image,
+            seller: item.seller,
+            buyer: item.buyer,
+            status: item.status,
+            seller_discord_id: item.seller_discord_id,
+            seller_user_id: item.seller_user_id, // Map the UUID
+            buyer_discord_id: item.buyer_discord_id,
+            item_id: item.item_id, // Link to original item id
+          };
+        });
         setItems(mappedItems);
       }
       setIsLoaded(true);
@@ -53,54 +140,162 @@ export default function Home() {
     fetchItems();
   }, []);
 
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [completionItemId, setCompletionItemId] = useState<number | null>(null);
-
   // Buyer requests purchase
-  const handlePurchaseRequest = (id: number) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, status: "거래대기중" as const } : item
-      )
-    );
-  };
+  const handlePurchaseRequest = async (id: number) => {
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
 
-  // Seller accepts trade (Simulated)
-  const handleAcceptTrade = (id: number) => {
     const item = items.find(i => i.id === id);
     if (!item) return;
 
-    // Update Item Status
+    // Prevent self-purchase
+    // Prefer UUID check
+    if (item.seller_user_id === user.id) {
+      alert("본인의 아이템은 구매할 수 없습니다.");
+      return;
+    }
+
+    // Fallback Legacy Check (if needed, but UUID is safer if populated)
+    // const discordId = user.identities?.find((id: any) => id.provider === 'discord')?.id;
+    // if (item.seller_discord_id === discordId) { ... } 
+    // ^ This legacy check might fail if seller_discord_id is now username. 
+    // We trust UUID check.
+
+    // Extract Identity
+    // User requested: Nickname = global_name, ID = username (full_name)
+    const globalName = user.user_metadata?.custom_claims?.global_name;
+    const username = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "Unknown";
+
+    const buyerNickname = globalName || username;
+    const discordHandle = username;
+
+    const discordId = user.identities?.find((id: any) => id.provider === 'discord')?.id; // Still need Snowflake for internal/logging if needed? or just use handle.
+
+    // Update Item Status in DB
+    const { error: updateError } = await supabase
+      .from('market_items')
+      .update({
+        status: '거래대기중',
+        buyer: buyerNickname,
+        buyer_discord_id: discordHandle // Store Handle (Username)
+      })
+      .eq('id', item.id);
+
+    if (updateError) {
+      console.error("Error updating item status:", updateError);
+      alert("상태 업데이트 실패");
+      return;
+    }
+
+    // Insert Notification
+    const { error } = await supabase
+      .from('notifications')
+      .insert({
+        item_id: item.id,
+        target_user_discord_id: item.seller_discord_id, // This might be snowflake OR username depending on when item was created. 
+        target_user_id: item.seller_user_id, // RLS relies on this UUID.
+        sender_user_discord_id: discordHandle, // Store Handle here too for consistency? Or Snowflake?
+        // Let's store Handle as per user request for "ID". 
+        message: `구매 요청: ${buyerNickname}님이 '${item.name}' 구매를 희망합니다.`,
+        result_code: 'trade_request',
+        is_read: false
+      });
+
+    if (error) {
+      console.error("Error sending notification:", error);
+      // Revert status change? ideally yes, but keeping simple
+      alert("구매 요청 전송 실패");
+      return;
+    }
+
+    // Update Local State (Optimistic)
     setItems((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, status: "거래중" as const } : item
+        item.id === id ? {
+          ...item,
+          status: "거래대기중" as const,
+          buyer: buyerNickname,
+          buyer_discord_id: discordHandle
+        } : item
+      )
+    );
+    alert("판매자에게 구매 요청을 보냈습니다.");
+  };
+
+  // Seller accepts trade (Triggered from Notification 'Trade' button)
+  const handleAcceptTrade = async (itemId: number) => {
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+
+    // Update Item Status to 'Trading' in DB
+    await supabase
+      .from('market_items')
+      .update({ status: '거래중' })
+      .eq('id', itemId);
+
+    // Update Local State
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === itemId ? { ...item, status: "거래중" as const } : item
       )
     );
 
-    // Create Notification
-    const newNotif: Notification = {
-      id: Date.now().toString(),
-      message: `'${item.name}' 아이템의 판매자 ${item.seller}님이 거래를 수락하셨습니다!`,
-      timestamp: new Date().toLocaleTimeString(),
-      read: false,
-      itemId: item.id,
-      type: "trade_accept"
-    };
+    // Navigate to Complete Tab
+    setCompletionItemId(itemId);
+    setActiveTab("complete");
+  };
 
-    setNotifications((prev) => [newNotif, ...prev]);
+  // Seller declines trade
+  const handleDeclineTrade = async (itemId: number) => {
+    // Revert status to 'Selling' in DB (Clear buyer info too)
+    await supabase
+      .from('market_items')
+      .update({ status: '판매중', buyer: null, buyer_discord_id: null })
+      .eq('id', itemId);
+
+    // Update Notification Status in DB to 'trade_declined'
+    await supabase
+      .from('notifications')
+      .update({ result_code: 'trade_declined' })
+      .eq('item_id', itemId)
+      .eq('result_code', 'trade_request'); // Only update the request notification
+
+    // Update Local State
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === itemId ? { ...item, status: "판매중" as const, buyer: undefined, buyer_discord_id: undefined } : item
+      )
+    );
   };
 
   const handleNavigateToComplete = (itemId: number) => {
     setCompletionItemId(itemId);
     setActiveTab("complete");
-    // Mark notification as read? Optional.
   };
 
-  const handleCompleteTrade = (itemId: number, buyerNickname: string) => {
+  const handleCompleteTrade = async (itemId: number) => {
+    // Update Item Status in DB to 'Completed'
+    await supabase
+      .from('market_items')
+      .update({
+        status: '판매완료'
+        // Buyer info is already set during purchase request
+      })
+      .eq('id', itemId);
+
+    // Update Notification Status to 'trade_complete'
+    await supabase
+      .from('notifications')
+      .update({ result_code: 'trade_complete' })
+      .eq('item_id', itemId)
+      .eq('result_code', 'trade_request');
+
     setItems((prev) =>
       prev.map((item) =>
         item.id === itemId
-          ? { ...item, status: "판매완료" as const, buyer: buyerNickname }
+          ? { ...item, status: "판매완료" as const }
           : item
       )
     );
@@ -119,8 +314,6 @@ export default function Home() {
   };
 
   // Search/Filter Logic
-  const [searchCriteria, setSearchCriteria] = useState<{ category: string; keyword: string } | null>(null);
-
   const handleSearch = (category: string, keyword: string) => {
     setSearchCriteria({ category, keyword });
   };
@@ -132,6 +325,8 @@ export default function Home() {
     return matchesCategory && matchesKeyword;
   });
 
+  const currentUserDiscordId = user?.identities?.find((id: any) => id.provider === 'discord')?.id;
+
   return (
     <div className="flex flex-col h-screen bg-[#1a1a1a] text-white overflow-hidden">
       <Header
@@ -140,19 +335,27 @@ export default function Home() {
         notifications={notifications}
         onClearNotifications={handleClearNotifications}
         onNavigateToComplete={handleNavigateToComplete}
+        onAcceptTrade={handleAcceptTrade}
+        onDeclineTrade={handleDeclineTrade}
+        user={user}
       />
 
       {activeTab === "sell" ? (
         <SellTab onRegister={handleRegisterItem} />
       ) : activeTab === "myitems" ? (
-        <MyItemsTab items={items} onAcceptTrade={handleAcceptTrade} />
+        <MyItemsTab items={items} onAcceptTrade={handleAcceptTrade} currentUserDiscordId={currentUserDiscordId} />
       ) : activeTab === "market" ? (
         <MarketPriceTab items={items} />
       ) : activeTab === "search" ? (
         <div className="flex flex-1 overflow-hidden">
           <Sidebar onSearch={handleSearch} />
           <main className="flex-1 flex flex-col min-w-0 bg-[#222]">
-            <ItemTable items={filteredItems} onPurchaseRequest={handlePurchaseRequest} isLoading={!isLoaded} />
+            <ItemTable
+              items={filteredItems}
+              onPurchaseRequest={handlePurchaseRequest}
+              isLoading={!isLoaded}
+              currentUserDiscordId={currentUserDiscordId}
+            />
           </main>
         </div>
       ) : activeTab === "complete" ? (

@@ -14,9 +14,10 @@ interface ItemTableProps {
   items: Item[];
   onPurchaseRequest: (id: number) => void;
   isLoading?: boolean;
+  currentUserDiscordId?: string;
 }
 
-export function ItemTable({ items, onPurchaseRequest, isLoading = false }: ItemTableProps) {
+export function ItemTable({ items, onPurchaseRequest, isLoading = false, currentUserDiscordId }: ItemTableProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -31,6 +32,18 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false }: ItemT
   }, [items]);
 
   const totalPages = Math.ceil(items.length / itemsPerPage);
+  const formatUserWithId = (name: string, id?: string) => {
+    if (!id) return name;
+    return (
+      <div className="flex flex-col items-center">
+        <span>{name}</span>
+        <span className="text-[10px] text-gray-500">
+          ({id.length > 6 ? id.substring(0, 6) + "..." : id})
+        </span>
+      </div>
+    );
+  };
+
   const currentItems = items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handlePageChange = (newPage: number) => {
@@ -41,6 +54,7 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false }: ItemT
   };
 
   const selectedItem = items.find(i => i.id === selectedId);
+  const isMyItem = selectedItem?.seller_discord_id && selectedItem.seller_discord_id === currentUserDiscordId;
 
   // Format number with commas
   const formatNumber = (num: number) => num.toLocaleString();
@@ -213,12 +227,12 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false }: ItemT
 
                       {/* Seller */}
                       <TableCell className="text-center text-gray-300 text-sm">
-                        {item.seller}
+                        {item.seller ? formatUserWithId(item.seller, item.seller_discord_id) : "-"}
                       </TableCell>
 
                       {/* Buyer */}
                       <TableCell className="text-center text-gray-300 text-sm">
-                        {item.buyer || "-"}
+                        {item.buyer ? formatUserWithId(item.buyer, item.buyer_discord_id) : "-"}
                       </TableCell>
 
                       {/* Status */}
@@ -266,14 +280,17 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false }: ItemT
             </div>
             <div className="flex flex-col">
               <span className="text-white font-bold text-lg">{selectedItem.name}</span>
-              <span className="text-gray-400 text-sm">아이템을 구매하시겠습니까?</span>
+              <span className="text-gray-400 text-sm">
+                {isMyItem ? "본인의 아이템입니다." : "아이템을 구매하시겠습니까?"}
+              </span>
             </div>
             <div className="ml-auto flex gap-2">
               <Button
-                className="bg-[oklch(0.6_0.15_240)] hover:bg-[oklch(0.55_0.15_240)] text-white"
+                className={`text-white ${isMyItem ? "bg-gray-600 cursor-not-allowed" : "bg-[oklch(0.6_0.15_240)] hover:bg-[oklch(0.55_0.15_240)]"}`}
                 onClick={() => setIsPurchaseDialogOpen(true)}
+                disabled={isMyItem}
               >
-                구매하기
+                {isMyItem ? "판매 중" : "구매하기"}
               </Button>
             </div>
           </div>

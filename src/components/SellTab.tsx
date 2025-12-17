@@ -1,25 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Package, Clock } from "lucide-react";
-
-// Mock data for global item database
-const GAME_ITEMS = [
-  { id: 101, name: "오래된 검", category: "무기", basicPrice: 1000 },
-  { id: 102, name: "빨간 포션", category: "소비", basicPrice: 50 },
-  { id: 103, name: "파란 포션", category: "소비", basicPrice: 100 },
-  { id: 104, name: "민첩함의 크리스탈", category: "소품", basicPrice: 50000 },
-  { id: 105, name: "주황버섯의 갓", category: "기타", basicPrice: 10 },
-  { id: 106, name: "청동", category: "기타", basicPrice: 500 },
-  { id: 107, name: "강철", category: "기타", basicPrice: 1000 },
-  { id: 108, name: "미스릴", category: "기타", basicPrice: 1500 },
-  { id: 109, name: "오리할콘", category: "기타", basicPrice: 2000 },
-  { id: 110, name: "아담antium", category: "기타", basicPrice: 3000 },
-];
-
 import { Item } from "@/lib/types";
+import { supabase } from "@/lib/supabase";
 
 interface SellTabProps {
   onRegister: (item: Item) => void;
@@ -27,28 +13,122 @@ interface SellTabProps {
 
 export function SellTab({ onRegister }: SellTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedItem, setSelectedItem] = useState<(typeof GAME_ITEMS)[0] | null>(null);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [price, setPrice] = useState("");
 
-  const filteredItems = GAME_ITEMS.filter((item) =>
-    item.name.includes(searchTerm)
-  );
+  const handleSearch = async (term: string) => {
+    setSearchTerm(term);
+    if (term.length === 0) {
+      setSearchResults([]);
+      return;
+    }
 
-  const handleRegister = () => {
-    if (!selectedItem || !price) return;
+    const { data, error } = await supabase
+      .from('items_info')
+      .select('*')
+      .ilike('name', `%${term}%`)
+      .limit(20);
 
+    if (error) {
+      console.error(error);
+    } else {
+      setSearchResults(data || []);
+    }
+  };
+
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+    });
+  }, []);
+
+  const handleRegister = async () => {
+    if (!selectedItem || !price || !user) {
+      if (!user) alert("로그인이 필요합니다.");
+      return;
+    }
+
+    const globalName = user.user_metadata?.custom_claims?.global_name;
+    const username = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "Unknown";
+
+    // User requested: Nickname = global_name, ID = username (full_name)
+    const sellerName = globalName || username;
+    const discordHandle = username; // This is the "ID" user wants to show (username)
+
+    // Note: discordId (snowflake) was used for 'seller_discord_id' previously, 
+    // but user wants "Discord ID (username)" to be displayed.
+    // However, 'seller_discord_id' implies the ID used for looking up the user or linking?
+    // If I change this to username, valid 'discord_id' columns in DB (if constrained) might fail?
+    // DB 'seller_discord_id' is TEXT. So it's fine.
+    // But 'target_user_discord_id' in notifications is used for filtering?
+    // Wait, in page.tsx I use `user.identities...id` (Snowflake) for `discordId` variable to FILTER notifications.
+    // If I start saving Username (handle) into `seller_discord_id`, then `fetchNotifications` which uses Snowflake ID will match NOTHING?
+    // 
+    // Let's check `page.tsx`.
+    // `const discordId = user.identities?.find((id: any) => id.provider === 'discord')?.id;` <- Snowflake.
+    // `fetchNotifications` queries `eq('target_user_discord_id', discordId)`.
+    //
+    // Issue: If I change `seller_discord_id` to be "Username (Handle)", then notification fetching (using Snowflake) breaks.
+    // User said: "Display Buyer/Seller ID in Complete Tab".
+    // User said: "Current fetched nickname is Discord ID (username)".
+    // User wants: "Nickname" = Global Name. "ID" = Username.
+    // They probably want me to DISPLAY the username as the "ID", but maybe keep Snowflake for internal logic?
+    // OR they want me to use Username for everything?
+    // "buyer_discord_id" column is used for display in Complete Tab.
+    // It is also used for internal logic? 
+    // `fetchNotifications` uses `target_user_id` (UUID) now (I just updated it!).
+    // So `seller_discord_id` is LESS critical for logic now, mostly for display?
+    // BUT `fetchNotifications` fallback/legacy might still use it?
+    // 
+    // In `page.tsx` step 816: `fetchNotifications` uses `target_user_id`.
+    // So changing `seller_discord_id` to username/handle is SAFE for notifications logic IF user_id is populated.
+    // 
+    // So I will store:
+    // seller: globalName
+    // seller_discord_id: username (Handle)
+
+    const { data, error } = await supabase
+      .from('market_items')
+      .insert({
+        item_id: selectedItem.id,
+        seller: sellerName,
+        seller_discord_id: discordHandle,
+        user_id: user.id,
+        user_id: user.id,
+        price: Number(price),
+        count: 1,
+        status: "판매중",
+        "timeLeft": "24시간 00분",
+        "isNew": true
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error(error);
+      alert("판매 등록 중 오류가 발생했습니다.");
+      return;
+    }
+
+    // Transform DB result to Item type for frontend state update if necessary
+    // But ideally valid, we trigger a refresh. For now, passing mapped item.
     const newItem: Item = {
-      id: Date.now(), // Generate unique ID
+      id: data.id,
       name: selectedItem.name,
       category: selectedItem.category,
-      price: Number(price),
+      price: data.price,
       basicPrice: selectedItem.basicPrice,
-      count: 1,
-      timeLeft: "24시간 00분",
-      isNew: true,
-      seller: "나",
-      status: "판매중",
-      image: "/placeholder-new.png"
+      count: data.count,
+      timeLeft: data.timeLeft,
+      isNew: data.isNew,
+      seller: data.seller,
+      status: data.status,
+      seller_discord_id: data.seller_discord_id,
+      image: selectedItem.image,
+      item_id: selectedItem.id
     };
 
     onRegister(newItem);
@@ -56,6 +136,7 @@ export function SellTab({ onRegister }: SellTabProps) {
     setSelectedItem(null);
     setPrice("");
     setSearchTerm("");
+    setSearchResults([]);
   };
 
   return (
@@ -67,15 +148,15 @@ export function SellTab({ onRegister }: SellTabProps) {
         <div className="relative">
           <Input
             placeholder="아이템 검색..."
-            className="bg-white text-black pl-8"
+            className="bg-[#333] text-white border-[#444] pl-8 focus:ring-offset-0 focus:ring-1 focus:ring-[oklch(0.6_0.15_240)]"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => handleSearch(e.target.value)}
           />
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
         </div>
 
         <div className="flex-1 overflow-y-auto bg-[#1a1a1a] border border-[#3d3d3d] rounded">
-          {filteredItems.map((item) => (
+          {searchResults.map((item) => (
             <div
               key={item.id}
               onClick={() => setSelectedItem(item)}
@@ -84,8 +165,12 @@ export function SellTab({ onRegister }: SellTabProps) {
                 ${selectedItem?.id === item.id ? "bg-[#2a3f4a] border-l-4 border-l-[oklch(0.6_0.15_240)]" : ""}
               `}
             >
-              <div className="w-8 h-8 bg-[#2a2a2a] rounded flex items-center justify-center border border-[#444]">
-                <Package className="h-4 w-4 text-gray-500" />
+              <div className="w-8 h-8 bg-[#2a2a2a] rounded flex items-center justify-center border border-[#444] overflow-hidden">
+                {item.image ? (
+                  <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
+                ) : (
+                  <Package className="h-4 w-4 text-gray-500" />
+                )}
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-bold">{item.name}</span>
@@ -93,9 +178,14 @@ export function SellTab({ onRegister }: SellTabProps) {
               </div>
             </div>
           ))}
-          {filteredItems.length === 0 && (
+          {searchTerm.length > 0 && searchResults.length === 0 && (
             <div className="p-4 text-center text-gray-500 text-sm">
               검색 결과가 없습니다.
+            </div>
+          )}
+          {searchTerm.length === 0 && (
+            <div className="p-4 text-center text-gray-500 text-sm">
+              아이템 이름을 입력하세요.
             </div>
           )}
         </div>
@@ -107,9 +197,13 @@ export function SellTab({ onRegister }: SellTabProps) {
 
         <div className="bg-[#1a1a1a] p-6 rounded border border-[#3d3d3d] flex flex-col gap-6">
           <div className="flex gap-4 items-start">
-            <div className="w-24 h-24 bg-[#2a2a2a] border border-[#444] flex items-center justify-center rounded">
+            <div className="w-24 h-24 bg-[#2a2a2a] border border-[#444] flex items-center justify-center rounded overflow-hidden">
               {selectedItem ? (
-                <Package className="h-10 w-10 text-white" />
+                selectedItem.image ? (
+                  <img src={selectedItem.image} alt={selectedItem.name} className="w-full h-full object-contain" />
+                ) : (
+                  <Package className="h-10 w-10 text-white" />
+                )
               ) : (
                 <span className="text-gray-600 text-xs">선택안함</span>
               )}
@@ -125,13 +219,13 @@ export function SellTab({ onRegister }: SellTabProps) {
             <div className="relative">
               <Input
                 type="number"
-                className="bg-white text-black text-right pr-8 font-bold"
+                className="bg-[#333] text-white border-[#444] text-right pr-8 font-bold focus:ring-offset-0 focus:ring-1 focus:ring-[oklch(0.6_0.15_240)]"
                 placeholder="0"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 disabled={!selectedItem}
               />
-              <span className="absolute right-3 top-2.5 text-black text-sm">메소</span>
+              <span className="absolute right-3 top-2.5 text-gray-400 text-sm">메소</span>
             </div>
 
             <label className="text-gray-400 font-bold">등록 시간</label>

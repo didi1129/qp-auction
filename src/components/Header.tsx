@@ -13,27 +13,13 @@ interface HeaderProps {
   notifications: Notification[];
   onClearNotifications: () => void;
   onNavigateToComplete: (itemId: number) => void;
+  onAcceptTrade: (itemId: number) => void;
+  onDeclineTrade: (itemId: number) => void;
+  user: SupabaseUser | null;
 }
 
-export function Header({ activeTab, onTabChange, notifications, onClearNotifications, onNavigateToComplete }: HeaderProps) {
-  const [user, setUser] = useState<SupabaseUser | null>(null);
+export function Header({ activeTab, onTabChange, notifications, onClearNotifications, onNavigateToComplete, onAcceptTrade, onDeclineTrade, user }: HeaderProps) {
   const unreadCount = notifications.filter(n => !n.read).length;
-
-  useEffect(() => {
-    // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   const handleLogin = async () => {
     await supabase.auth.signInWithOAuth({
@@ -83,7 +69,42 @@ export function Header({ activeTab, onTabChange, notifications, onClearNotificat
                       <div key={notif.id} className="p-3 border-b border-[#333] hover:bg-[#2a2a2a] text-sm">
                         <div className="text-gray-200">{notif.message}</div>
                         <div className="text-xs text-gray-500 mt-1">{notif.timestamp}</div>
-                        {/* Action Button for Trade Acceptance */}
+                        {/* Action Buttons & Badges */}
+                        {notif.type === 'trade_request' && notif.itemId && (
+                          <div className="flex gap-2 mt-2">
+                            <Button
+                              size="sm"
+                              className="flex-1 bg-[oklch(0.6_0.15_240)] hover:bg-[oklch(0.55_0.15_240)] text-white text-xs h-7"
+                              onClick={() => {
+                                // Optimistically disable or just rely on parent
+                                onAcceptTrade(notif.itemId!)
+                              }}
+                            >
+                              거래
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="flex-1 text-white text-xs h-7"
+                              onClick={() => onDeclineTrade(notif.itemId!)}
+                            >
+                              거절
+                            </Button>
+                          </div>
+                        )}
+
+                        {notif.type === 'trade_declined' && (
+                          <div className="mt-2 flex justify-end">
+                            <span className="text-xs bg-red-900 text-red-200 px-2 py-1 rounded font-bold">거절함</span>
+                          </div>
+                        )}
+
+                        {notif.type === 'trade_completed' && (
+                          <div className="mt-2 flex justify-end">
+                            <span className="text-xs bg-blue-900 text-blue-200 px-2 py-1 rounded font-bold">거래완료</span>
+                          </div>
+                        )}
+
                         {notif.type === 'trade_accept' && notif.itemId && (
                           <Button
                             size="sm"

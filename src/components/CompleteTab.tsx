@@ -7,12 +7,10 @@ import { CheckCircle, Upload, AlertCircle } from "lucide-react";
 
 interface CompleteTabProps {
   item: Item | null;
-  onComplete: (itemId: number, buyerNickname: string) => void;
+  onComplete: (itemId: number) => void;
 }
 
 export function CompleteTab({ item, onComplete }: CompleteTabProps) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [buyerNickname, setBuyerNickname] = useState("나"); // Default to 'Me' for demo
   const [hasScreenshot, setHasScreenshot] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -24,8 +22,7 @@ export function CompleteTab({ item, onComplete }: CompleteTabProps) {
 
   const handleComplete = () => {
     if (!item) return;
-    onComplete(item.id, buyerNickname);
-    // Alert logic could be here or in parent
+    onComplete(item.id);
   };
 
   if (!item) {
@@ -56,7 +53,8 @@ export function CompleteTab({ item, onComplete }: CompleteTabProps) {
           </div>
           <div className="flex flex-col justify-center">
             <span className="font-bold text-lg">{item.name}</span>
-            <span className="text-gray-400 text-sm">판매자: {item.seller}</span>
+            <span className="text-gray-400 text-sm">판매자: {item.seller} <span className="text-xs text-gray-500">({item.seller_discord_id || "ID 없음"})</span></span>
+            <span className="text-gray-300 text-sm">구매자: {item.buyer || "(구매 요청자)"} <span className="text-xs text-gray-500">({item.buyer_discord_id || "-"})</span></span>
             <span className="text-yellow-500 font-bold">{item.price.toLocaleString()} 메소</span>
           </div>
         </div>

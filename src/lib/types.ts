@@ -14,6 +14,10 @@ export interface Item {
   seller?: string;
   buyer?: string;
   status?: "판매중" | "거래대기중" | "거래중" | "판매완료";
+  seller_discord_id?: string;
+  seller_user_id?: string;
+  buyer_discord_id?: string;
+  item_id?: number;
 }
 
 export interface Notification {
@@ -22,5 +26,5 @@ export interface Notification {
   timestamp: string;
   read: boolean;
   itemId?: number; // Link to the item for actions
-  type?: "trade_request" | "trade_accept" | "trade_complete";
+  type?: "trade_request" | "trade_accept" | "trade_complete" | "trade_declined" | "trade_completed";
 }
