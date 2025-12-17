@@ -7,6 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, AlertCircle, Package } from "lucide-react";
 import { Item } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -291,7 +292,11 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
         ) : selectedItem ? (
           <div className="flex items-center gap-4 w-full">
             <div className="w-16 h-16 bg-[#1a1a1a] border border-[#444] flex items-center justify-center">
-              <Package className="text-gray-600" />
+              {
+                selectedItem.image ? (<Image src={selectedItem.image} alt={selectedItem.name} width={64} height={74} />)
+                  :
+                  <Package className="text-gray-600" />
+              }
             </div>
             <div className="flex flex-col">
               <span className="text-white font-bold text-lg">{selectedItem.name}</span>
