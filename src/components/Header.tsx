@@ -1,7 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Search, History, Heart, ShoppingBag, CheckSquare, HelpCircle, User, StopCircle } from "lucide-react";
 
-export function Header() {
+interface HeaderProps {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+}
+
+export function Header({ activeTab, onTabChange }: HeaderProps) {
   return (
     <header className="flex flex-col w-full bg-sidebar border-b border-border">
       {/* Top Bar with Logo and User Stats */}
@@ -34,19 +39,33 @@ export function Header() {
 
       {/* Navigation Tabs */}
       <div className="flex items-end px-4 gap-1 bg-[#2a2a2a] border-b border-[#3d3d3d] pt-2">
-        <NavTab label="검색" icon={<Search className="h-4 w-4" />} active />
-        <NavTab label="시세" icon={<History className="h-4 w-4" />} />
-        <NavTab label="찜목록" icon={<Heart className="h-4 w-4" />} />
-        <NavTab label="판매" icon={<ShoppingBag className="h-4 w-4" />} />
-        <NavTab label="완료" icon={<CheckSquare className="h-4 w-4" />} />
+        <NavTab label="검색" tabId="search" icon={<Search className="h-4 w-4" />} activeTab={activeTab} onClick={onTabChange} />
+        <NavTab label="시세" tabId="market" icon={<History className="h-4 w-4" />} activeTab={activeTab} onClick={onTabChange} />
+        <NavTab label="찜목록" tabId="wishlist" icon={<Heart className="h-4 w-4" />} activeTab={activeTab} onClick={onTabChange} />
+        <NavTab label="판매" tabId="sell" icon={<ShoppingBag className="h-4 w-4" />} activeTab={activeTab} onClick={onTabChange} />
+        <NavTab label="완료" tabId="complete" icon={<CheckSquare className="h-4 w-4" />} activeTab={activeTab} onClick={onTabChange} />
       </div>
     </header>
   );
 }
 
-function NavTab({ label, icon, active = false }: { label: string; icon: React.ReactNode; active?: boolean }) {
+function NavTab({
+  label,
+  tabId,
+  icon,
+  activeTab,
+  onClick
+}: {
+  label: string;
+  tabId: string;
+  icon: React.ReactNode;
+  activeTab: string;
+  onClick: (tab: string) => void;
+}) {
+  const active = activeTab === tabId;
   return (
     <button
+      onClick={() => onClick(tabId)}
       className={`
         flex items-center gap-2 px-8 py-2 rounded-t-lg font-bold text-sm transition-colors
         ${active

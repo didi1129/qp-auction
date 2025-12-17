@@ -22,6 +22,8 @@ export const MOCK_ITEMS = [
     isNew: true,
     category: "소품",
     image: "/placeholder-ring.png",
+    seller: "큐플유저1",
+    status: "판매중",
   },
   {
     id: 2,
@@ -33,6 +35,8 @@ export const MOCK_ITEMS = [
     isNew: true,
     category: "옷",
     image: "/placeholder-shoes.png",
+    seller: "운동화수집가",
+    status: "판매중",
   },
   {
     id: 3,
@@ -44,6 +48,8 @@ export const MOCK_ITEMS = [
     isNew: true,
     category: "옷",
     image: "/placeholder-shoes2.png",
+    seller: "장사꾼A",
+    status: "판매중",
   },
   {
     id: 4,
@@ -55,6 +61,8 @@ export const MOCK_ITEMS = [
     isNew: false,
     category: "옷",
     image: "/placeholder-boots.png",
+    seller: "겨울이좋아",
+    status: "판매중",
   },
   {
     id: 5,
@@ -67,6 +75,8 @@ export const MOCK_ITEMS = [
     isNew: false,
     category: "소품",
     image: "/placeholder-fire.png",
+    seller: "강화실패",
+    status: "판매중",
   },
   {
     id: 6,
@@ -79,6 +89,8 @@ export const MOCK_ITEMS = [
     isNew: false,
     category: "소품",
     image: "/placeholder-gem.png",
+    seller: "젬스톤팝니다",
+    status: "거래대기중",
   },
   {
     id: 7,
@@ -90,5 +102,7 @@ export const MOCK_ITEMS = [
     isNew: true,
     category: "무기", // Note: '무기' isn't in main list but in screenshot
     image: "/placeholder-weapon.png",
+    seller: "엔젤릭버스터",
+    status: "판매중",
   },
 ];
