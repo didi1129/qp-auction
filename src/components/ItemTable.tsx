@@ -54,7 +54,7 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
   };
 
   const selectedItem = items.find(i => i.id === selectedId);
-  const isMyItem = selectedItem?.seller_discord_id && selectedItem.seller_discord_id === currentUserDiscordId;
+  const isMyItem = Boolean(selectedItem?.seller_discord_id && selectedItem.seller_discord_id === currentUserDiscordId);
 
   // Format number with commas
   const formatNumber = (num: number) => num.toLocaleString();
