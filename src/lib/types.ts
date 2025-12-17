@@ -21,4 +21,6 @@ export interface Notification {
   message: string;
   timestamp: string;
   read: boolean;
+  itemId?: number; // Link to the item for actions
+  type?: "trade_request" | "trade_accept" | "trade_complete";
 }

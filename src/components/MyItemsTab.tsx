@@ -2,7 +2,7 @@
 
 import { Item } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Package, CheckCircle, Clock } from "lucide-react";
+import { Package, CheckCircle } from "lucide-react";
 
 interface MyItemsTabProps {
   items: Item[];

@@ -73,6 +73,7 @@ export function ItemTable({ items, onPurchaseRequest }: ItemTableProps) {
               <TableHead className="text-center text-gray-300 font-bold h-8 w-[150px]">개당 가격</TableHead>
               <TableHead className="text-center text-gray-300 font-bold h-8 w-[120px]">남은시간</TableHead>
               <TableHead className="text-center text-gray-300 font-bold h-8 w-[100px]">판매자</TableHead>
+              <TableHead className="text-center text-gray-300 font-bold h-8 w-[100px]">구매자</TableHead>
               <TableHead className="text-center text-gray-300 font-bold h-8 w-[80px]">상태</TableHead>
             </TableRow>
           </TableHeader>
@@ -140,6 +141,11 @@ export function ItemTable({ items, onPurchaseRequest }: ItemTableProps) {
                     {item.seller}
                   </TableCell>
 
+                  {/* Buyer */}
+                  <TableCell className="text-center text-gray-300 text-sm">
+                    {item.buyer || "-"}
+                  </TableCell>
+
                   {/* Status */}
                   <TableCell className="text-center text-sm">
                     <span className={`
@@ -158,7 +164,7 @@ export function ItemTable({ items, onPurchaseRequest }: ItemTableProps) {
             {/* Fill empty rows to maintain height look */}
             {Array.from({ length: Math.max(0, 12 - items.length) }).map((_, i) => (
               <TableRow key={`empty-${i}`} className="border-[#333] h-[50px] hover:bg-transparent pointer-events-none">
-                <TableCell colSpan={7} className="p-0"></TableCell>
+                <TableCell colSpan={8} className="p-0"></TableCell>
               </TableRow>
             ))}
           </TableBody>

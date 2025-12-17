@@ -8,9 +8,10 @@ interface HeaderProps {
   onTabChange: (tab: string) => void;
   notifications: Notification[];
   onClearNotifications: () => void;
+  onNavigateToComplete: (itemId: number) => void;
 }
 
-export function Header({ activeTab, onTabChange, notifications, onClearNotifications }: HeaderProps) {
+export function Header({ activeTab, onTabChange, notifications, onClearNotifications, onNavigateToComplete }: HeaderProps) {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
@@ -57,6 +58,16 @@ export function Header({ activeTab, onTabChange, notifications, onClearNotificat
                       <div key={notif.id} className="p-3 border-b border-[#333] hover:bg-[#2a2a2a] text-sm">
                         <div className="text-gray-200">{notif.message}</div>
                         <div className="text-xs text-gray-500 mt-1">{notif.timestamp}</div>
+                        {/* Action Button for Trade Acceptance */}
+                        {notif.type === 'trade_accept' && notif.itemId && (
+                          <Button
+                            size="sm"
+                            className="w-full mt-2 bg-[oklch(0.6_0.15_240)] hover:bg-[oklch(0.55_0.15_240)] text-white text-xs h-7"
+                            onClick={() => onNavigateToComplete(notif.itemId!)}
+                          >
+                            거래완료하기
+                          </Button>
+                        )}
                       </div>
                     ))
                   )}
