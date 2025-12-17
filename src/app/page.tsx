@@ -141,7 +141,7 @@ export default function Home() {
   }, []);
 
   // Buyer requests purchase
-  const handlePurchaseRequest = async (id: number) => {
+  const handlePurchaseRequest = async (id: number, message?: string) => {
     if (!user) {
       alert("로그인이 필요합니다.");
       return;
@@ -189,6 +189,10 @@ export default function Home() {
       return;
     }
 
+    const notificationMessage = message
+      ? `구매 요청: ${buyerNickname}님이 '${item.name}' 구매를 희망합니다.\n"${message}"`
+      : `구매 요청: ${buyerNickname}님이 '${item.name}' 구매를 희망합니다.`;
+
     // Insert Notification
     const { error } = await supabase
       .from('notifications')
@@ -198,7 +202,8 @@ export default function Home() {
         target_user_id: item.seller_user_id, // RLS relies on this UUID.
         sender_user_discord_id: discordHandle, // Store Handle here too for consistency? Or Snowflake?
         // Let's store Handle as per user request for "ID". 
-        message: `구매 요청: ${buyerNickname}님이 '${item.name}' 구매를 희망합니다.`,
+        message: notificationMessage,
+        buyer_message: message || null,
         result_code: 'trade_request',
         is_read: false
       });
@@ -383,7 +388,7 @@ export default function Home() {
       />
 
       {activeTab === "sell" ? (
-        <SellTab onRegister={handleRegisterItem} />
+        <SellTab onRegister={handleRegisterItem} user={user} />
       ) : activeTab === "myitems" ? (
         <MyItemsTab
           items={items}

@@ -7,11 +7,14 @@ import { Search, Package, Clock } from "lucide-react";
 import { Item } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
 
+import { User } from "@supabase/supabase-js";
+
 interface SellTabProps {
   onRegister: (item: Item) => void;
+  user: User | null;
 }
 
-export function SellTab({ onRegister }: SellTabProps) {
+export function SellTab({ onRegister, user }: SellTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
@@ -36,14 +39,6 @@ export function SellTab({ onRegister }: SellTabProps) {
       setSearchResults(data || []);
     }
   };
-
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-    });
-  }, []);
 
   const handleRegister = async () => {
     if (!selectedItem || !price || !user) {

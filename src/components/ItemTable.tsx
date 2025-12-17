@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface ItemTableProps {
   items: Item[];
-  onPurchaseRequest: (id: number) => void;
+  onPurchaseRequest: (id: number, message?: string) => void;
   isLoading?: boolean;
   currentUserDiscordId?: string;
   currentUserId?: string;
@@ -21,6 +21,7 @@ interface ItemTableProps {
 export function ItemTable({ items, onPurchaseRequest, isLoading = false, currentUserDiscordId, currentUserId }: ItemTableProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
+  const [buyerMessage, setBuyerMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -60,6 +61,15 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
     (currentUserDiscordId && selectedItem?.seller_discord_id === currentUserDiscordId)
   );
 
+  console.log("ItemTable Selection Debug:", {
+    selectedItemName: selectedItem?.name,
+    currentUserId,
+    sellerUserId: selectedItem?.seller_user_id,
+    currentUserDiscordId,
+    sellerDiscordId: selectedItem?.seller_discord_id,
+    isMyItem
+  });
+
   // Format number with commas
   const formatNumber = (num: number) => num.toLocaleString();
 
@@ -78,9 +88,10 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
 
   const handlePurchaseRequest = () => {
     if (selectedId) {
-      onPurchaseRequest(selectedId);
+      onPurchaseRequest(selectedId, buyerMessage);
       setIsPurchaseDialogOpen(false);
       setSelectedId(null);
+      setBuyerMessage("");
     }
   };
 
@@ -316,9 +327,15 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
             <AlertDialogDescription className="text-gray-400">
               {selectedItem?.name} 아이템에 구매 요청을 보내시겠습니까?
             </AlertDialogDescription>
+            <textarea
+              className="w-full bg-[#333] border border-[#444] text-white p-2 rounded mt-4 h-24 resize-none focus:outline-none focus:border-[oklch(0.6_0.15_240)] placeholder-gray-500"
+              placeholder="판매자에게 보낼 메시지를 입력하세요 (선택사항)"
+              value={buyerMessage}
+              onChange={(e) => setBuyerMessage(e.target.value)}
+            />
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-[#333] border-[#444] text-white hover:bg-[#444] hover:text-white">취소</AlertDialogCancel>
+            <AlertDialogCancel className="bg-[#333] border-[#444] text-white hover:bg-[#444] hover:text-white" onClick={() => setBuyerMessage("")}>취소</AlertDialogCancel>
             <AlertDialogAction
               onClick={handlePurchaseRequest}
               className="bg-[oklch(0.6_0.15_240)] text-white hover:bg-[oklch(0.55_0.15_240)]"
