@@ -2,21 +2,58 @@
 
 import { Item } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Package, CheckCircle } from "lucide-react";
+import { Package, CheckCircle, Pencil, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 
 interface MyItemsTabProps {
   items: Item[];
   onAcceptTrade: (itemId: number) => void;
   currentUserDiscordId?: string;
+  currentUserId?: string;
+  onDelete?: (itemId: number) => void;
+  onUpdate?: (itemId: number, updates: Partial<Item>) => void;
 }
 
-export function MyItemsTab({ items, onAcceptTrade, currentUserDiscordId }: MyItemsTabProps) {
+export function MyItemsTab({ items, onAcceptTrade, currentUserDiscordId, currentUserId, onDelete, onUpdate }: MyItemsTabProps) {
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
+  const [newPrice, setNewPrice] = useState("");
+
+  const handleEditClick = (item: Item) => {
+    setEditingItem(item);
+    setNewPrice(item.price.toString());
+  };
+
+  const handleDeleteClick = (itemId: number) => {
+    setDeleteItemId(itemId);
+  };
+
+  const handleUpdateConfirm = () => {
+    if (editingItem && onUpdate) {
+      onUpdate(editingItem.id, { price: Number(newPrice) });
+      setEditingItem(null);
+    }
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteItemId && onDelete) {
+      onDelete(deleteItemId);
+      setDeleteItemId(null);
+    }
+  };
   // Filter items where I am the buyer (requested)
   // For now, sticking to status check. In future, we should track requester ID.
   const myRequests = items.filter(i => i.status === "거래대기중" || i.status === "거래중" || (i.status === "판매완료" && i.buyer_discord_id === currentUserDiscordId));
 
   // My Sales: Items where I am the seller
-  const mySales = items.filter(i => i.seller_discord_id === currentUserDiscordId);
+  // Check UUID first, then fallback to Discord Handle
+  const mySales = items.filter(i =>
+    (currentUserId && i.seller_user_id === currentUserId) ||
+    (currentUserDiscordId && i.seller_discord_id === currentUserDiscordId)
+  );
 
   return (
     <div className="flex flex-1 gap-4 p-4 bg-[#222] text-white overflow-hidden h-full">
@@ -82,8 +119,17 @@ export function MyItemsTab({ items, onAcceptTrade, currentUserDiscordId }: MyIte
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <span className="text-xs bg-[#333] px-2 py-1 rounded">{item.status}</span>
-                  {item.status === '판매완료' && item.buyer && (
-                    <span className="text-xs text-gray-400">구매자: {item.buyer}</span>
+                  {item.status === '판매완료' ? (
+                    item.buyer && <span className="text-xs text-gray-400">구매자: {item.buyer}</span>
+                  ) : (
+                    <div className="flex gap-1 mt-1">
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-white" onClick={() => handleEditClick(item)}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-red-500" onClick={() => handleDeleteClick(item.id)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -91,6 +137,46 @@ export function MyItemsTab({ items, onAcceptTrade, currentUserDiscordId }: MyIte
           )}
         </div>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
+        <DialogContent className="bg-[#222] border-[#3d3d3d] text-white">
+          <DialogHeader>
+            <DialogTitle>판매 정보 수정</DialogTitle>
+            <DialogDescription>
+              수정할 가격을 입력해주세요.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              type="number"
+              value={newPrice}
+              onChange={(e) => setNewPrice(e.target.value)}
+              className="bg-[#333] border-[#444] text-white"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditingItem(null)}>취소</Button>
+            <Button onClick={handleUpdateConfirm} className="bg-[oklch(0.6_0.15_240)] text-white hover:bg-[oklch(0.55_0.15_240)]">수정 완료</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Alert */}
+      <AlertDialog open={!!deleteItemId} onOpenChange={(open) => !open && setDeleteItemId(null)}>
+        <AlertDialogContent className="bg-[#222] border-[#3d3d3d] text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>판매 취소</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              정말로 판매를 취소하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-[#333] border-[#444] text-white hover:bg-[#444]">취소</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 text-white hover:bg-red-700">판매 취소</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );

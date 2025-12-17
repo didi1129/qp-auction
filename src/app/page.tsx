@@ -304,6 +304,46 @@ export default function Home() {
     setActiveTab("search"); // Go back to list to see the update
   };
 
+  // User deletes their own item
+  const handleDeleteItem = async (itemId: number) => {
+    const { error } = await supabase
+      .from('market_items')
+      .delete()
+      .eq('id', itemId);
+
+    if (error) {
+      console.error("Error deleting item:", error);
+      alert("아이템 삭제 실패");
+      return;
+    }
+
+    setItems((prev) => prev.filter((item) => item.id !== itemId));
+    alert("아이템이 삭제되었습니다.");
+  };
+
+  // User updates their own item (e.g. price change)
+  const handleUpdateItem = async (itemId: number, updates: Partial<Item>) => {
+    const { error } = await supabase
+      .from('market_items')
+      .update({
+        price: updates.price, // Only price support for now
+      })
+      .eq('id', itemId);
+
+    if (error) {
+      console.error("Error updating item:", error);
+      alert("아이템 수정 실패");
+      return;
+    }
+
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === itemId ? { ...item, ...updates } : item
+      )
+    );
+    alert("아이템 정보가 수정되었습니다.");
+  };
+
   // User registers new item
   const handleRegisterItem = (newItem: Item) => {
     setItems((prev) => [newItem, ...prev]);
@@ -325,7 +365,9 @@ export default function Home() {
     return matchesCategory && matchesKeyword;
   });
 
-  const currentUserDiscordId = user?.identities?.find((id: any) => id.provider === 'discord')?.id;
+  const username = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Unknown";
+  // User wants "ID" to be the username (handle), so we use that for matching "buyer_discord_id" or display.
+  // We use user.id (UUID) for strict ownership checks (seller_user_id).
 
   return (
     <div className="flex flex-col h-screen bg-[#1a1a1a] text-white overflow-hidden">
@@ -343,7 +385,14 @@ export default function Home() {
       {activeTab === "sell" ? (
         <SellTab onRegister={handleRegisterItem} />
       ) : activeTab === "myitems" ? (
-        <MyItemsTab items={items} onAcceptTrade={handleAcceptTrade} currentUserDiscordId={currentUserDiscordId} />
+        <MyItemsTab
+          items={items}
+          onAcceptTrade={handleAcceptTrade}
+          currentUserDiscordId={username}
+          currentUserId={user?.id}
+          onDelete={handleDeleteItem}
+          onUpdate={handleUpdateItem}
+        />
       ) : activeTab === "market" ? (
         <MarketPriceTab items={items} />
       ) : activeTab === "search" ? (
@@ -354,7 +403,8 @@ export default function Home() {
               items={filteredItems}
               onPurchaseRequest={handlePurchaseRequest}
               isLoading={!isLoaded}
-              currentUserDiscordId={currentUserDiscordId}
+              currentUserDiscordId={username}
+              currentUserId={user?.id}
             />
           </main>
         </div>

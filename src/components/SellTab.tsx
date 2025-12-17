@@ -127,6 +127,7 @@ export function SellTab({ onRegister }: SellTabProps) {
       seller: data.seller,
       status: data.status,
       seller_discord_id: data.seller_discord_id,
+      seller_user_id: user.id,
       image: selectedItem.image,
       item_id: selectedItem.id
     };

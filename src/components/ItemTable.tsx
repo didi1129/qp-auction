@@ -15,9 +15,10 @@ interface ItemTableProps {
   onPurchaseRequest: (id: number) => void;
   isLoading?: boolean;
   currentUserDiscordId?: string;
+  currentUserId?: string;
 }
 
-export function ItemTable({ items, onPurchaseRequest, isLoading = false, currentUserDiscordId }: ItemTableProps) {
+export function ItemTable({ items, onPurchaseRequest, isLoading = false, currentUserDiscordId, currentUserId }: ItemTableProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -54,7 +55,10 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
   };
 
   const selectedItem = items.find(i => i.id === selectedId);
-  const isMyItem = Boolean(selectedItem?.seller_discord_id && selectedItem.seller_discord_id === currentUserDiscordId);
+  const isMyItem = Boolean(
+    (currentUserId && selectedItem?.seller_user_id === currentUserId) ||
+    (currentUserDiscordId && selectedItem?.seller_discord_id === currentUserDiscordId)
+  );
 
   // Format number with commas
   const formatNumber = (num: number) => num.toLocaleString();
