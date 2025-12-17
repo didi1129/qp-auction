@@ -95,7 +95,23 @@ export function ItemTable({ items, onPurchaseRequest }: ItemTableProps) {
                   {/* Image Column */}
                   <TableCell className="p-1 text-center relative">
                     <div className="w-10 h-10 bg-[#1a1a1a] border border-[#444] rounded mx-auto flex items-center justify-center relative overflow-hidden group">
-                      <div className="text-xs text-gray-600">IMG</div>
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-full h-full object-contain rounded-md"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : (
+                        <div className="text-xs text-gray-600">IMG</div>
+                      )}
+
+                      {/* Fallback Text if image fails to load (hidden by default if image exists) */}
+                      {item.image && <div className="hidden absolute inset-0 flex items-center justify-center text-xs text-gray-600 bg-[#1a1a1a]">IMG</div>}
+
                       {item.isNew && (
                         <span className="absolute top-0 left-0 bg-[#65a30d] text-[8px] text-white px-0.5 leading-none">W</span>
                       )}

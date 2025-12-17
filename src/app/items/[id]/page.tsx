@@ -24,15 +24,30 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
   useEffect(() => {
     const fetchItem = async () => {
       const { data, error } = await supabase
-        .from('items_info')
+        .from('market_listings')
         .select('*')
-        .eq('id', resolvedParams.id)
+        .eq('market_id', resolvedParams.id) // Query by market_id
         .single();
 
       if (error) {
         console.error("Error fetching item:", error);
       } else {
-        setItem(data as unknown as Item);
+        // Map to Item type
+        const mappedItem: Item = {
+          id: data.market_id,
+          name: data.name,
+          price: data.price,
+          level: 0,
+          category: data.category,
+          count: data.count,
+          timeLeft: data.timeLeft,
+          isNew: data.isNew,
+          image: data.image,
+          seller: data.seller,
+          status: data.status,
+          // Additional fields logic
+        };
+        setItem(mappedItem);
       }
       setLoading(false);
     };
@@ -68,7 +83,23 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
           {/* Image Section */}
           <div className="flex flex-col gap-4">
             <div className="aspect-square bg-[#222] border border-[#444] rounded-lg flex items-center justify-center relative overflow-hidden">
-              <div className="text-4xl text-gray-600 font-bold">IMG</div>
+              {item.image ? (
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="max-w-full max-h-full object-contain p-4"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+              ) : (
+                <div className="text-4xl text-gray-600 font-bold">IMG</div>
+              )}
+
+              {/* Fallback Text if image fails to load */}
+              {item.image && <div className="hidden absolute inset-0 flex items-center justify-center text-4xl text-gray-600 font-bold bg-[#222]">IMG</div>}
+
               {/* Level Requirement Badge */}
               {(item.level ?? 0) > 0 && (
                 <div className="absolute top-2 right-2 bg-black/50 px-2 py-1 rounded text-xs text-yellow-500 font-bold border border-yellow-500/30">

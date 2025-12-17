@@ -25,19 +25,27 @@ export default function Home() {
 
   useEffect(() => {
     const fetchItems = async () => {
-      const { data, error } = await supabase.from('items_info').select('*');
+      const { data, error } = await supabase.from('market_listings').select('*');
       if (error) {
         console.error("Error fetching items:", error);
       } else if (data && data.length > 0) {
-        // Transform data if necessary, or assume it matches generic structure
-        // We'll rely on MOCK_ITEMS if DB is empty to keep demo working, 
-        // but if DB has data, we append or replace. 
-        // For this task, let's REPLACE MOCK_ITEMS if DB has items, or maybe merge.
-        // Let's replace to show "real" data.
-
-        // Ensure data matches Item type (runtime check ideally needed)
-        // For now, simple cast and generic mapping
-        setItems(data as unknown as Item[]);
+        // Map backend view structure to Frontend Item type
+        const mappedItems: Item[] = data.map((item: any) => ({
+          id: item.market_id, // Map market_id to id
+          name: item.name,
+          price: item.price,
+          level: 0, // Default or fetch if available in view
+          category: item.category,
+          count: item.count,
+          timeLeft: item.timeLeft,
+          isNew: item.isNew,
+          image: item.image,
+          seller: item.seller,
+          status: item.status,
+          // Add other fields if present in View
+          // item_gender, item_source etc can be ignored or added to Item type if needed
+        }));
+        setItems(mappedItems);
       }
       setIsLoaded(true);
     };
