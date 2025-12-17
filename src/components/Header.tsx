@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Search, History, Heart, ShoppingBag, CheckSquare, HelpCircle, User, StopCircle, Bell, Box } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Search, History, Heart, ShoppingBag, CheckSquare, HelpCircle, User, LogIn, Bell, Box, LogOut } from "lucide-react";
 import { Notification } from "@/lib/types";
 
 interface HeaderProps {
@@ -12,7 +14,11 @@ interface HeaderProps {
 }
 
 export function Header({ activeTab, onTabChange, notifications, onClearNotifications, onNavigateToComplete }: HeaderProps) {
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  const handleLogin = () => setIsLoggedIn(true);
+  const handleLogout = () => setIsLoggedIn(false);
 
   return (
     <header className="flex flex-col w-full bg-sidebar border-b border-border">
@@ -25,15 +31,6 @@ export function Header({ activeTab, onTabChange, notifications, onClearNotificat
         </div>
 
         <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-2 bg-[#2a2a2a] px-3 py-1 rounded border border-[#3d3d3d]">
-            <span className="text-gray-400">큐플포인트</span>
-            <span className="text-white font-bold">5,389</span>
-            <span className="text-yellow-500 ml-2">●</span>
-          </div>
-          <div className="flex items-center gap-2 bg-[#2a2a2a] px-3 py-1 rounded border border-[#3d3d3d]">
-            <span className="text-yellow-500 font-bold">254,048,586</span>
-          </div>
-
           <div className="flex items-center gap-2 text-gray-400">
             {/* Notification Popover */}
             <Popover>
@@ -75,12 +72,33 @@ export function Header({ activeTab, onTabChange, notifications, onClearNotificat
               </PopoverContent>
             </Popover>
 
-            <User className="h-4 w-4 ml-2" />
-            <StopCircle className="h-4 w-4" />
-            <HelpCircle className="h-4 w-4" />
-            <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white h-auto p-0 ml-2">
-              나가기 &gt;
-            </Button>
+            {isLoggedIn ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white h-auto p-0 ml-2">
+                    <User className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-[#222] border-[#3d3d3d] text-white" align="end">
+                  <DropdownMenuItem onClick={handleLogout} className="focus:bg-[#333] focus:text-white cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>로그아웃</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-gray-400 hover:text-white ml-2 gap-1"
+                onClick={handleLogin}
+              >
+                <LogIn className="h-4 w-4" />
+                <span className="text-xs">로그인</span>
+              </Button>
+            )}
+
+            <HelpCircle className="h-4 w-4 ml-2" />
           </div>
         </div>
       </div>

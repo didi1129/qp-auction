@@ -8,6 +8,8 @@ import { SellTab } from "@/components/SellTab";
 import { MyItemsTab } from "@/components/MyItemsTab";
 import { MOCK_ITEMS } from "@/lib/constants";
 import { Item, Notification } from "@/lib/types";
+import { useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 import { CompleteTab } from "@/components/CompleteTab";
 import { MarketPriceTab } from "@/components/MarketPriceTab";
@@ -17,6 +19,31 @@ export default function Home() {
 
   // Cast MOCK_ITEMS to Item[] to ensure compatibility
   const [items, setItems] = useState<Item[]>(MOCK_ITEMS as Item[]);
+
+  // Supabase Fetching
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      const { data, error } = await supabase.from('items_info').select('*');
+      if (error) {
+        console.error("Error fetching items:", error);
+      } else if (data && data.length > 0) {
+        // Transform data if necessary, or assume it matches generic structure
+        // We'll rely on MOCK_ITEMS if DB is empty to keep demo working, 
+        // but if DB has data, we append or replace. 
+        // For this task, let's REPLACE MOCK_ITEMS if DB has items, or maybe merge.
+        // Let's replace to show "real" data.
+
+        // Ensure data matches Item type (runtime check ideally needed)
+        // For now, simple cast and generic mapping
+        setItems(data as unknown as Item[]);
+      }
+      setIsLoaded(true);
+    };
+
+    fetchItems();
+  }, []);
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [completionItemId, setCompletionItemId] = useState<number | null>(null);

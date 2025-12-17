@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, AlertCircle, Package } from "lucide-react";
 import { Item } from "@/lib/types";
+import { useRouter } from "next/navigation";
 
 interface ItemTableProps {
   items: Item[];
@@ -15,6 +16,7 @@ interface ItemTableProps {
 export function ItemTable({ items, onPurchaseRequest }: ItemTableProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
+  const router = useRouter();
 
   const selectedItem = items.find(i => i.id === selectedId);
 
@@ -105,9 +107,15 @@ export function ItemTable({ items, onPurchaseRequest }: ItemTableProps) {
 
                   {/* Name Column */}
                   <TableCell className="text-white font-medium">
-                    <div className="flex items-center gap-2">
+                    <div
+                      className="flex items-center gap-2 cursor-pointer hover:underline hover:text-yellow-500 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/items/${item.id}`);
+                      }}
+                    >
                       {item.name}
-                      {item.count && item.count > 1 && <span className="text-gray-400 text-xs">({item.count})</span>}
+                      {item.count && item.count > 1 && <span className="text-gray-400 text-xs text-no-underline">({item.count})</span>}
                     </div>
                   </TableCell>
 
