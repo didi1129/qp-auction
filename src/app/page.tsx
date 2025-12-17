@@ -138,7 +138,7 @@ export default function Home() {
         <div className="flex flex-1 overflow-hidden">
           <Sidebar />
           <main className="flex-1 flex flex-col min-w-0 bg-[#222]">
-            <ItemTable items={items} onPurchaseRequest={handlePurchaseRequest} />
+            <ItemTable items={items} onPurchaseRequest={handlePurchaseRequest} isLoading={!isLoaded} />
           </main>
         </div>
       ) : activeTab === "complete" ? (

@@ -8,12 +8,15 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, AlertCircle, Pa
 import { Item } from "@/lib/types";
 import { useRouter } from "next/navigation";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 interface ItemTableProps {
   items: Item[];
   onPurchaseRequest: (id: number) => void;
+  isLoading?: boolean;
 }
 
-export function ItemTable({ items, onPurchaseRequest }: ItemTableProps) {
+export function ItemTable({ items, onPurchaseRequest, isLoading = false }: ItemTableProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
   const router = useRouter();
@@ -80,124 +83,151 @@ export function ItemTable({ items, onPurchaseRequest }: ItemTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.map((item) => {
-              const isSelling = item.status === "판매중";
-              return (
-                <TableRow
-                  key={item.id}
-                  className={`
-                    border-[#333] transition-colors h-[50px]
-                    ${!isSelling ? "opacity-50 pointer-events-none bg-[#1a1a1a]" : "cursor-pointer hover:bg-[#333]"}
-                    ${selectedId === item.id ? "bg-[#2a3f4a] hover:bg-[#2a3f4a] border-l-2 border-l-[oklch(0.6_0.15_240)]" : ""}
-                `}
-                  onClick={() => isSelling && setSelectedId(item.id)}
-                >
-                  {/* Image Column */}
-                  <TableCell className="p-1 text-center relative">
-                    <div className="w-10 h-10 bg-[#1a1a1a] border border-[#444] rounded mx-auto flex items-center justify-center relative overflow-hidden group">
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-full object-contain rounded-md"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                            (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                          }}
-                        />
-                      ) : (
-                        <div className="text-xs text-gray-600">IMG</div>
-                      )}
-
-                      {/* Fallback Text if image fails to load (hidden by default if image exists) */}
-                      {item.image && <div className="hidden absolute inset-0 flex items-center justify-center text-xs text-gray-600 bg-[#1a1a1a]">IMG</div>}
-
-                      {item.isNew && (
-                        <span className="absolute top-0 left-0 bg-[#65a30d] text-[8px] text-white px-0.5 leading-none">W</span>
-                      )}
-                      {(item.level ?? 0) > 0 && (
-                        <span className="absolute bottom-0 right-0 text-[9px] text-yellow-500 font-bold drop-shadow-md">Lv.{item.level}</span>
-                      )}
-                    </div>
-                  </TableCell>
-
-                  {/* Name Column */}
-                  <TableCell className="text-white font-medium">
-                    <div
-                      className="flex items-center gap-2 cursor-pointer hover:underline hover:text-yellow-500 transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        router.push(`/items/${item.id}`);
-                      }}
-                    >
-                      {item.name}
-                      {item.count && item.count > 1 && <span className="text-gray-400 text-xs text-no-underline">({item.count})</span>}
-                    </div>
-                  </TableCell>
-
-                  {/* Price Column */}
-                  <TableCell className="text-right">
-                    <div className="flex flex-col items-end">
-                      <span className="text-white font-bold">{formatNumber(item.price)}</span>
-                      <span className="text-gray-500 text-xs">{formatKoreanPrice(item.price)}</span>
-                    </div>
-                  </TableCell>
-
-                  {/* Per Unit Price */}
-                  <TableCell className="text-right">
-                    {item.perItemPrice ? (
-                      <div className="flex flex-col items-end">
-                        <span className="text-white font-bold">{formatNumber(item.perItemPrice)}</span>
-                        <span className="text-gray-500 text-xs">{formatKoreanPrice(item.perItemPrice)}</span>
-                      </div>
-                    ) : (
-                      <span className="text-gray-600">-</span>
-                    )}
-                  </TableCell>
-
-                  {/* Time Left */}
-                  <TableCell className="text-center text-white text-sm">
-                    {item.timeLeft}
-                  </TableCell>
-
-                  {/* Seller */}
-                  <TableCell className="text-center text-gray-300 text-sm">
-                    {item.seller}
-                  </TableCell>
-
-                  {/* Buyer */}
-                  <TableCell className="text-center text-gray-300 text-sm">
-                    {item.buyer || "-"}
-                  </TableCell>
-
-                  {/* Status */}
-                  <TableCell className="text-center text-sm">
-                    <span className={`
-                      px-2 py-0.5 rounded text-xs font-bold
-                      ${item.status === "판매중" ? "bg-[#333] text-green-500 border border-green-900" : ""}
-                      ${item.status === "거래대기중" ? "bg-[#333] text-yellow-500 border border-yellow-900" : ""}
-                      ${item.status === "거래중" ? "bg-[#333] text-blue-500 border border-blue-900" : ""}
-                      ${item.status === "판매완료" ? "bg-[#333] text-red-500 border border-red-900" : ""}
-                    `}>
-                      {item.status}
-                    </span>
-                  </TableCell>
+            {isLoading ? (
+              // Skeleton Rows
+              Array.from({ length: 12 }).map((_, i) => (
+                <TableRow key={`skeleton-${i}`} className="border-[#333] h-[50px] pointer-events-none">
+                  <TableCell className="p-1"><Skeleton className="h-10 w-10 mx-auto rounded" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-3/4" /></TableCell>
+                  <TableCell><div className="flex flex-col items-end gap-1"><Skeleton className="h-4 w-20" /><Skeleton className="h-3 w-12" /></div></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16 mx-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-12 mx-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-12 mx-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-12 mx-auto rounded" /></TableCell>
                 </TableRow>
-              )
-            })}
-            {/* Fill empty rows to maintain height look */}
-            {Array.from({ length: Math.max(0, 12 - items.length) }).map((_, i) => (
-              <TableRow key={`empty-${i}`} className="border-[#333] h-[50px] hover:bg-transparent pointer-events-none">
-                <TableCell colSpan={8} className="p-0"></TableCell>
-              </TableRow>
-            ))}
+              ))
+            ) : (
+              <>
+                {items.map((item) => {
+                  const isSelling = item.status === "판매중";
+                  return (
+                    <TableRow
+                      key={item.id}
+                      className={`
+                        border-[#333] transition-colors h-[50px]
+                        ${!isSelling ? "opacity-50 pointer-events-none bg-[#1a1a1a]" : "cursor-pointer hover:bg-[#333]"}
+                        ${selectedId === item.id ? "bg-[#2a3f4a] hover:bg-[#2a3f4a] border-l-2 border-l-[oklch(0.6_0.15_240)]" : ""}
+                    `}
+                      onClick={() => isSelling && setSelectedId(item.id)}
+                    >
+                      {/* Image Column */}
+                      <TableCell className="p-1 text-center relative">
+                        <div className="w-10 h-10 bg-[#1a1a1a] border border-[#444] rounded mx-auto flex items-center justify-center relative overflow-hidden group">
+                          {item.image ? (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="w-full h-full object-contain rounded-md"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                              }}
+                            />
+                          ) : (
+                            <div className="text-xs text-gray-600">IMG</div>
+                          )}
+
+                          {/* Fallback Text if image fails to load (hidden by default if image exists) */}
+                          {item.image && <div className="hidden absolute inset-0 flex items-center justify-center text-xs text-gray-600 bg-[#1a1a1a]">IMG</div>}
+
+                          {item.isNew && (
+                            <span className="absolute top-0 left-0 bg-[#65a30d] text-[8px] text-white px-0.5 leading-none">W</span>
+                          )}
+                          {(item.level ?? 0) > 0 && (
+                            <span className="absolute bottom-0 right-0 text-[9px] text-yellow-500 font-bold drop-shadow-md">Lv.{item.level}</span>
+                          )}
+                        </div>
+                      </TableCell>
+
+                      {/* Name Column */}
+                      <TableCell className="text-white font-medium">
+                        <div
+                          className="flex items-center gap-2 cursor-pointer hover:underline hover:text-yellow-500 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/items/${item.id}`);
+                          }}
+                        >
+                          {item.name}
+                          {item.count && item.count > 1 && <span className="text-gray-400 text-xs text-no-underline">({item.count})</span>}
+                        </div>
+                      </TableCell>
+
+                      {/* Price Column */}
+                      <TableCell className="text-right">
+                        <div className="flex flex-col items-end">
+                          <span className="text-white font-bold">{formatNumber(item.price)}</span>
+                          <span className="text-gray-500 text-xs">{formatKoreanPrice(item.price)}</span>
+                        </div>
+                      </TableCell>
+
+                      {/* Per Unit Price */}
+                      <TableCell className="text-right">
+                        {item.perItemPrice ? (
+                          <div className="flex flex-col items-end">
+                            <span className="text-white font-bold">{formatNumber(item.perItemPrice)}</span>
+                            <span className="text-gray-500 text-xs">{formatKoreanPrice(item.perItemPrice)}</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-600">-</span>
+                        )}
+                      </TableCell>
+
+                      {/* Time Left */}
+                      <TableCell className="text-center text-white text-sm">
+                        {item.timeLeft}
+                      </TableCell>
+
+                      {/* Seller */}
+                      <TableCell className="text-center text-gray-300 text-sm">
+                        {item.seller}
+                      </TableCell>
+
+                      {/* Buyer */}
+                      <TableCell className="text-center text-gray-300 text-sm">
+                        {item.buyer || "-"}
+                      </TableCell>
+
+                      {/* Status */}
+                      <TableCell className="text-center text-sm">
+                        <span className={`
+                        px-2 py-0.5 rounded text-xs font-bold
+                        ${item.status === "판매중" ? "bg-[#333] text-green-500 border border-green-900" : ""}
+                        ${item.status === "거래대기중" ? "bg-[#333] text-yellow-500 border border-yellow-900" : ""}
+                        ${item.status === "거래중" ? "bg-[#333] text-blue-500 border border-blue-900" : ""}
+                        ${item.status === "판매완료" ? "bg-[#333] text-red-500 border border-red-900" : ""}
+                        `}>
+                          {item.status}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+                {/* Fill empty rows to maintain height look */}
+                {Array.from({ length: Math.max(0, 12 - items.length) }).map((_, i) => (
+                  <TableRow key={`empty-${i}`} className="border-[#333] h-[50px] hover:bg-transparent pointer-events-none">
+                    <TableCell colSpan={8} className="p-0"></TableCell>
+                  </TableRow>
+                ))}
+              </>
+            )}
+
           </TableBody>
         </Table>
       </div>
 
       {/* Detail Footer Panel */}
       <div className="h-[100px] bg-[#222] border-t border-[#3d3d3d] p-4 flex items-center justify-center">
-        {selectedItem ? (
+        {isLoading ? (
+          <div className="flex items-center gap-4 w-full">
+            <Skeleton className="w-16 h-16 rounded" />
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          </div>
+        ) : selectedItem ? (
           <div className="flex items-center gap-4 w-full">
             <div className="w-16 h-16 bg-[#1a1a1a] border border-[#444] flex items-center justify-center">
               <Package className="text-gray-600" />
@@ -248,3 +278,4 @@ export function ItemTable({ items, onPurchaseRequest }: ItemTableProps) {
     </div>
   );
 }
+
