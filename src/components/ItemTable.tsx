@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -19,7 +19,26 @@ interface ItemTableProps {
 export function ItemTable({ items, onPurchaseRequest, isLoading = false }: ItemTableProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const router = useRouter();
+
+  // Reset pagination when items change (e.g., search filter applied)
+  useEffect(() => {
+    setCurrentPage(1);
+    setSelectedId(null);
+  }, [items]);
+
+  const totalPages = Math.ceil(items.length / itemsPerPage);
+  const currentItems = items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      setSelectedId(null); // Clear selection on page change
+    }
+  };
 
   const selectedItem = items.find(i => i.id === selectedId);
 
@@ -55,11 +74,13 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false }: ItemT
           <span className="font-bold text-white border-l-4 border-[oklch(0.6_0.15_240)] pl-2">검색결과</span>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400"><ChevronsLeft className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400"><ChevronLeft className="h-4 w-4" /></Button>
-          <span className="text-white text-sm font-bold bg-[#1a1a1a] px-3 py-0.5 rounded border border-[#3d3d3d]">1 / 12</span>
-          <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400"><ChevronRight className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400"><ChevronsRight className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400" onClick={() => handlePageChange(1)} disabled={currentPage === 1}><ChevronsLeft className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}><ChevronLeft className="h-4 w-4" /></Button>
+          <span className="text-white text-sm font-bold bg-[#1a1a1a] px-3 py-0.5 rounded border border-[#3d3d3d]">
+            {items.length === 0 ? "0 / 0" : `${currentPage} / ${totalPages}`}
+          </span>
+          <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages || totalPages === 0}><ChevronRight className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400" onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages || totalPages === 0}><ChevronsRight className="h-4 w-4" /></Button>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-[oklch(0.6_0.15_240)]"></div>
@@ -85,7 +106,7 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false }: ItemT
           <TableBody>
             {isLoading ? (
               // Skeleton Rows
-              Array.from({ length: 12 }).map((_, i) => (
+              Array.from({ length: itemsPerPage }).map((_, i) => (
                 <TableRow key={`skeleton-${i}`} className="border-[#333] h-[50px] pointer-events-none">
                   <TableCell className="p-1"><Skeleton className="h-10 w-10 mx-auto rounded" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-3/4" /></TableCell>
@@ -97,9 +118,20 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false }: ItemT
                   <TableCell><Skeleton className="h-5 w-12 mx-auto rounded" /></TableCell>
                 </TableRow>
               ))
+            ) : items.length === 0 ? (
+              // No Results State
+              <TableRow className="h-[400px] border-[#333] hover:bg-transparent">
+                <TableCell colSpan={8} className="text-center text-gray-500">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <AlertCircle className="h-10 w-10 text-gray-600 mb-2" />
+                    <span className="text-lg font-bold">검색 결과가 없습니다.</span>
+                    <span className="text-sm">다른 검색어나 카테고리를 선택해 보세요.</span>
+                  </div>
+                </TableCell>
+              </TableRow>
             ) : (
               <>
-                {items.map((item) => {
+                {currentItems.map((item) => {
                   const isSelling = item.status === "판매중";
                   return (
                     <TableRow
@@ -205,7 +237,7 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false }: ItemT
                   )
                 })}
                 {/* Fill empty rows to maintain height look */}
-                {Array.from({ length: Math.max(0, 12 - items.length) }).map((_, i) => (
+                {Array.from({ length: Math.max(0, 10 - currentItems.length) }).map((_, i) => (
                   <TableRow key={`empty-${i}`} className="border-[#333] h-[50px] hover:bg-transparent pointer-events-none">
                     <TableCell colSpan={8} className="p-0"></TableCell>
                   </TableRow>

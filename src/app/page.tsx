@@ -118,6 +118,20 @@ export default function Home() {
     setNotifications([]);
   };
 
+  // Search/Filter Logic
+  const [searchCriteria, setSearchCriteria] = useState<{ category: string; keyword: string } | null>(null);
+
+  const handleSearch = (category: string, keyword: string) => {
+    setSearchCriteria({ category, keyword });
+  };
+
+  const filteredItems = items.filter((item) => {
+    if (!searchCriteria) return true;
+    const matchesCategory = item.category === searchCriteria.category;
+    const matchesKeyword = item.name.toLowerCase().includes(searchCriteria.keyword.toLowerCase());
+    return matchesCategory && matchesKeyword;
+  });
+
   return (
     <div className="flex flex-col h-screen bg-[#1a1a1a] text-white overflow-hidden">
       <Header
@@ -136,9 +150,9 @@ export default function Home() {
         <MarketPriceTab items={items} />
       ) : activeTab === "search" ? (
         <div className="flex flex-1 overflow-hidden">
-          <Sidebar />
+          <Sidebar onSearch={handleSearch} />
           <main className="flex-1 flex flex-col min-w-0 bg-[#222]">
-            <ItemTable items={items} onPurchaseRequest={handlePurchaseRequest} isLoading={!isLoaded} />
+            <ItemTable items={filteredItems} onPurchaseRequest={handlePurchaseRequest} isLoading={!isLoaded} />
           </main>
         </div>
       ) : activeTab === "complete" ? (
