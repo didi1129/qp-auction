@@ -504,35 +504,6 @@ export default function Home() {
     setActiveTab("search"); // Go back to list to see the update
   };
 
-  // User deletes their own item
-  const handleDeleteItem = async (itemId: number) => {
-    // First, delete related notifications to avoid foreign key constraint error
-    const { error: notifError } = await supabase
-      .from('notifications')
-      .delete()
-      .eq('item_id', itemId);
-
-    if (notifError) {
-      console.error("Error deleting notifications for item:", notifError);
-      // We continue anyway, as the notifications might not exist or the trigger might handle it,
-      // but usually we want to make sure the main deletion doesn't fail.
-    }
-
-    const { error } = await supabase
-      .from('market_items')
-      .delete()
-      .eq('id', itemId);
-
-    if (error) {
-      console.error("Error deleting item:", error);
-      alert("아이템 삭제 실패");
-      return;
-    }
-
-    setItems((prev) => prev.filter((item) => item.id !== itemId));
-    alert("아이템이 삭제되었습니다.");
-  };
-
   // User updates their own item (e.g. price change)
   const handleUpdateItem = async (itemId: number, updates: Partial<Item>) => {
     const { error } = await supabase
@@ -641,6 +612,35 @@ export default function Home() {
     return categoryMatch && keywordMatch && minPriceMatch && maxPriceMatch;
   });
 
+  // Seller deletes/cancels their own sale item
+  const handleDeleteItem = async (id: number) => {
+    // 1. Delete associated notifications first to avoid FK constraint violations
+    const { error: notifError } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('item_id', id);
+
+    if (notifError) {
+      console.error("Error deleting associated notifications:", notifError);
+    }
+
+    // 2. Delete the item from market_items
+    const { error: itemError } = await supabase
+      .from('market_items')
+      .delete()
+      .eq('id', id);
+
+    if (itemError) {
+      console.error("Error deleting item:", itemError);
+      alert("판매 취소 실패");
+      return;
+    }
+
+    // 3. Update local state
+    setItems((prev) => prev.filter((i) => i.id !== id));
+    alert("판매가 취소되었습니다.");
+  };
+
   const username = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Unknown";
   // User wants "ID" to be the username (handle), so we use that for matching "buyer_discord_id" or display.
   // We use user.id (UUID) for strict ownership checks (seller_user_id).
@@ -668,6 +668,7 @@ export default function Home() {
           currentUserDiscordId={username}
           currentUserId={user?.id}
           onUpdate={handleUpdateItem}
+          onDelete={handleDeleteItem}
           onCancelPurchaseRequest={handleCancelPurchaseRequest}
           wishlistIds={wishlistIds}
           onToggleWishlist={handleToggleWishlist}

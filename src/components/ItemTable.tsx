@@ -198,10 +198,7 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
                           {item.image && <div className="hidden absolute inset-0 flex items-center justify-center text-xs text-gray-600 bg-[#1a1a1a]">IMG</div>}
 
                           {item.isNew && (
-                            <span className="absolute top-0 left-0 bg-[#65a30d] text-[8px] text-white px-0.5 leading-none">W</span>
-                          )}
-                          {(item.level ?? 0) > 0 && (
-                            <span className="absolute bottom-0 right-0 text-[9px] text-yellow-500 font-bold drop-shadow-md">Lv.{item.level}</span>
+                            <span className="absolute top-0 left-0 bg-[#65a30d] text-[8px] text-white px-0.5 leading-none">N</span>
                           )}
                         </div>
                       </TableCell>
