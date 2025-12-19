@@ -118,10 +118,11 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
         <Table>
           <TableHeader className="bg-[#1a1a1a] sticky top-0 z-10">
             <TableRow className="border-[#3d3d3d] hover:bg-[#1a1a1a]">
-              <TableHead className="text-center text-gray-300 font-bold h-8 w-[60px]"></TableHead>
-              <TableHead className="text-center text-gray-300 font-bold h-8">아이템 이름</TableHead>
+              {/* 이미지 */}
+              <TableHead className="text-center text-gray-300 font-bold h-8 w-[50px]"></TableHead>
+              <TableHead className="text-gray-300 font-bold h-8 w-[250px] text-left">아이템 이름</TableHead>
               <TableHead className="text-center text-gray-300 font-bold h-8 w-[150px]">가격</TableHead>
-              <TableHead className="text-center text-gray-300 font-bold h-8 w-[150px]">개당 가격</TableHead>
+              {/* <TableHead className="text-center text-gray-300 font-bold h-8 w-[150px]">개당 가격</TableHead> */}
               <TableHead className="text-center text-gray-300 font-bold h-8 w-[120px]">남은시간</TableHead>
               <TableHead className="text-center text-gray-300 font-bold h-8 w-[100px]">판매자</TableHead>
               <TableHead className="text-center text-gray-300 font-bold h-8 w-[100px]">구매자</TableHead>
@@ -133,13 +134,21 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
               // Skeleton Rows
               Array.from({ length: itemsPerPage }).map((_, i) => (
                 <TableRow key={`skeleton-${i}`} className="border-[#333] h-[50px] pointer-events-none">
-                  <TableCell className="p-1"><Skeleton className="h-10 w-10 mx-auto rounded" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-3/4" /></TableCell>
-                  <TableCell><div className="flex flex-col items-end gap-1"><Skeleton className="h-4 w-20" /><Skeleton className="h-3 w-12" /></div></TableCell>
-                  <TableCell><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
+                  {/* 이미지 */}
+                  <TableCell className="p-1 w-[50px]"><Skeleton className="h-10 w-5 mx-auto rounded" /></TableCell>
+                  {/* 이름 */}
+                  <TableCell className="w-[250px]"><Skeleton className="h-4 w-3/4" /></TableCell>
+                  {/* 가격 */}
+                  <TableCell><div className="flex flex-col items-center gap-1"><Skeleton className="h-4 w-20" /><Skeleton className="h-3 w-12" /></div></TableCell>
+                  {/* 개당 가격 */}
+                  {/* <TableCell><Skeleton className="h-4 w-16 ml-auto" /></TableCell> */}
+                  {/* 남은시간 */}
                   <TableCell><Skeleton className="h-4 w-16 mx-auto" /></TableCell>
+                  {/* 판매자 */}
                   <TableCell><Skeleton className="h-4 w-12 mx-auto" /></TableCell>
+                  {/* 구매자 */}
                   <TableCell><Skeleton className="h-4 w-12 mx-auto" /></TableCell>
+                  {/* 상태 */}
                   <TableCell><Skeleton className="h-5 w-12 mx-auto rounded" /></TableCell>
                 </TableRow>
               ))
@@ -169,7 +178,7 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
                       onClick={() => isSelling && setSelectedId(item.id)}
                     >
                       {/* Image Column */}
-                      <TableCell className="p-1 text-center relative">
+                      <TableCell className="p-1 w-[50px] text-center relative">
                         <div className="w-10 h-10 bg-[#1a1a1a] border border-[#444] rounded mx-auto flex items-center justify-center relative overflow-hidden group">
                           {item.image ? (
                             <img
@@ -195,9 +204,9 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
                       </TableCell>
 
                       {/* Name Column */}
-                      <TableCell className="text-white font-medium">
+                      <TableCell className="text-white font-medium max-w-[250px] pl-0">
                         <div
-                          className="flex items-center gap-2 cursor-pointer hover:underline hover:text-yellow-500 transition-colors"
+                          className="flex items-center gap-2 cursor-pointer hover:underline hover:text-yellow-500 transition-colors truncate w-fit"
                           onClick={(e) => {
                             e.stopPropagation();
                             router.push(`/items/${item.id}`);
@@ -241,24 +250,24 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
                       </TableCell>
 
                       {/* Price Column */}
-                      <TableCell className="text-right">
-                        <div className="flex flex-col items-end">
+                      <TableCell className="text-center">
+                        <div className="flex flex-col items-center">
                           <span className="text-white font-bold">{formatNumber(item.price)}</span>
                           <span className="text-gray-500 text-xs">{formatKoreanPrice(item.price)}</span>
                         </div>
                       </TableCell>
 
                       {/* Per Unit Price */}
-                      <TableCell className="text-right">
+                      {/* <TableCell className="text-center">
                         {item.perItemPrice ? (
-                          <div className="flex flex-col items-end">
+                          <div className="flex flex-col items-center">
                             <span className="text-white font-bold">{formatNumber(item.perItemPrice)}</span>
                             <span className="text-gray-500 text-xs">{formatKoreanPrice(item.perItemPrice)}</span>
                           </div>
                         ) : (
                           <span className="text-gray-600">-</span>
                         )}
-                      </TableCell>
+                      </TableCell> */}
 
                       {/* Time Left */}
                       <TableCell className="text-center text-white text-sm">
