@@ -24,6 +24,7 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [buyerMessage, setBuyerMessage] = useState("");
   const router = useRouter();
 
@@ -59,6 +60,8 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
           seller_discord_id: data.seller_discord_id,
           item_id: data.item_id,
           trade_message: data.trade_message,
+          buyer_user_id: data.buyer_user_id,
+          cancel_count: data.cancel_count ?? 0,
         };
         setItem(mappedItem);
       }
@@ -93,7 +96,8 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
       .update({
         status: '거래대기중',
         buyer: buyerNickname,
-        buyer_discord_id: discordHandle
+        buyer_discord_id: discordHandle,
+        buyer_user_id: user.id
       })
       .eq('id', item.id);
 
@@ -126,10 +130,59 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
       return;
     }
 
-    setItem(prev => prev ? { ...prev, status: '거래대기중' } : null);
+    setItem(prev => prev ? { ...prev, status: '거래대기중', buyer_user_id: user.id } : null);
     setIsPurchaseDialogOpen(false);
     setBuyerMessage("");
     alert("판매자에게 구매 요청을 보냈습니다.");
+  };
+
+  const handleCancelPurchaseRequest = async () => {
+    if (!item || !user) return;
+
+    if (item.cancel_count !== undefined && item.cancel_count >= 3) {
+      alert("구매 요청 취소는 최대 3회까지만 가능합니다.");
+      return;
+    }
+
+    const { error: updateError } = await supabase
+      .from('market_items')
+      .update({
+        status: '판매중',
+        buyer: null,
+        buyer_discord_id: null,
+        buyer_user_id: null,
+        cancel_count: (item.cancel_count ?? 0) + 1
+      })
+      .eq('id', item.id);
+
+    if (updateError) {
+      console.error("Error cancelling purchase request:", updateError);
+      alert("취소 처리 중 오류가 발생했습니다.");
+      return;
+    }
+
+    // 알림 삭제
+    const { error: notifError } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('item_id', item.id)
+      .eq('result_code', 'trade_request');
+
+    if (notifError) {
+      console.error("Error deleting notification:", notifError);
+    }
+
+    setItem(prev => prev ? {
+      ...prev,
+      status: '판매중',
+      buyer: null,
+      buyer_discord_id: null,
+      buyer_user_id: null,
+      cancel_count: (prev.cancel_count ?? 0) + 1
+    } : null);
+
+    setIsCancelDialogOpen(false);
+    alert("구매 요청이 취소되었습니다.");
   };
 
   if (loading) {
@@ -230,16 +283,26 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
                 </span>
               </div>
 
-              <Button
-                onClick={() => setIsPurchaseDialogOpen(true)}
-                disabled={item.status !== '판매중' || isMyItem}
-                className={`w-full h-14 text-xl font-bold ${item.status === '판매중' && !isMyItem
-                  ? "bg-[oklch(0.6_0.15_240)] hover:bg-[oklch(0.55_0.15_240)]"
-                  : "bg-gray-700 cursor-not-allowed"
-                  }`}
-              >
-                {isMyItem ? "본인 아이템" : item.status === '판매중' ? "구매 요청" : item.status}
-              </Button>
+              {item.status === '거래대기중' && item.buyer_user_id === user?.id ? (
+                <Button
+                  onClick={() => setIsCancelDialogOpen(true)}
+                  disabled={(item.cancel_count ?? 0) >= 3}
+                  className="w-full h-14 text-xl font-bold bg-red-600 hover:bg-red-700"
+                >
+                  요청 취소
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => setIsPurchaseDialogOpen(true)}
+                  disabled={item.status !== '판매중' || isMyItem}
+                  className={`w-full h-14 text-xl font-bold ${item.status === '판매중' && !isMyItem
+                    ? "bg-[oklch(0.6_0.15_240)] hover:bg-[oklch(0.55_0.15_240)]"
+                    : "bg-gray-700 cursor-not-allowed"
+                    }`}
+                >
+                  {isMyItem ? "본인 아이템" : item.status === '판매중' ? "구매 요청" : item.status}
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -266,6 +329,29 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
               className="bg-[oklch(0.6_0.15_240)] text-white hover:bg-[oklch(0.55_0.15_240)]"
             >
               구매 요청
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+        <AlertDialogContent className="bg-[#222] border-[#3d3d3d] text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>구매 요청 취소</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              구매 요청을 취소하시겠습니까? 요청 취소는 최대 3회까지만 가능합니다.
+              <br />
+              <span className="text-red-400 text-xs mt-2 block">
+                (현재 취소 횟수: {item.cancel_count || 0} / 3)
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-[#333] border-[#444] text-white hover:bg-[#444] hover:text-white">취소</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelPurchaseRequest}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              요청 취소
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

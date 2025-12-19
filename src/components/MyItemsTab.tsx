@@ -16,13 +16,15 @@ interface MyItemsTabProps {
   currentUserId?: string;
   onDelete?: (itemId: number) => void;
   onUpdate?: (itemId: number, updates: Partial<Item>) => void;
+  onCancelPurchaseRequest?: (itemId: number) => void;
 }
 
-export function MyItemsTab({ items, onAcceptTrade, currentUserDiscordId, currentUserId, onDelete, onUpdate }: MyItemsTabProps) {
+export function MyItemsTab({ items, onAcceptTrade, currentUserDiscordId, currentUserId, onDelete, onUpdate, onCancelPurchaseRequest }: MyItemsTabProps) {
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
   const [newPrice, setNewPrice] = useState("");
   const [newTradeMessage, setNewTradeMessage] = useState("");
+  const [cancelItemId, setCancelItemId] = useState<number | null>(null);
 
   const handleEditClick = (item: Item) => {
     setEditingItem(item);
@@ -51,8 +53,14 @@ export function MyItemsTab({ items, onAcceptTrade, currentUserDiscordId, current
     }
   };
   // Filter items where I am the buyer (requested)
-  // For now, sticking to status check. In future, we should track requester ID.
-  const myRequests = items.filter(i => i.status === "거래대기중" || i.status === "거래중" || (i.status === "판매완료" && i.buyer_discord_id === currentUserDiscordId));
+  const myRequests = items.filter(i => {
+    // Exclude if I am the seller
+    const isMySale = (currentUserId && i.seller_user_id === currentUserId) || (currentUserDiscordId && i.seller_discord_id === currentUserDiscordId);
+    if (isMySale) return false;
+
+    return i.status === "거래대기중" || i.status === "거래중" ||
+      (i.status === "판매완료" && (i.buyer_user_id === currentUserId || i.buyer_discord_id === currentUserDiscordId));
+  });
 
   // My Sales: Items where I am the seller
   // Check UUID first, then fallback to Discord Handle
@@ -85,14 +93,29 @@ export function MyItemsTab({ items, onAcceptTrade, currentUserDiscordId, current
                     }
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-bold text-white">{item.name}</span>
-                    <span className="text-xs text-gray-400">{item.category} | {item.seller}</span>
+                    <span className="font-bold text-white">
+                      {item.name} {item.status === '판매완료' && <span className="text-gray-500 font-normal">(거래완료)</span>}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      {item.seller} ({item.seller_discord_id}) {item.trade_message && <span className="text-yellow-500/80 ml-1 italic font-medium">| [메시지: {item.trade_message}]</span>}
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className={`text-sm font-bold ${item.status === '거래중' ? 'text-blue-500' : 'text-yellow-500'}`}>
-                    {item.status}
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm font-bold ${item.status === '거래중' ? 'text-blue-500' : item.status === '판매완료' ? 'text-gray-500' : 'text-yellow-500'}`}>
+                    {item.status === '판매완료' ? '거래완료' : item.status}
                   </span>
+                  {item.status === '거래대기중' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 text-red-400 hover:text-red-500 hover:bg-red-500/10"
+                      onClick={() => setCancelItemId(item.id)}
+                      disabled={(item.cancel_count ?? 0) >= 3}
+                    >
+                      취소
+                    </Button>
+                  )}
                 </div>
               </div>
             ))
@@ -101,7 +124,7 @@ export function MyItemsTab({ items, onAcceptTrade, currentUserDiscordId, current
       </div>
 
       {/* My Sales (Just for context, optional based on prompt but good to have) */}
-      <div className="w-[350px] flex flex-col gap-4">
+      <div className="flex-1 flex flex-col gap-4">
         <h2 className="text-lg font-bold text-yellow-500 flex items-center gap-2">
           <CheckCircle className="h-5 w-5" /> 내 판매 내역
         </h2>
@@ -203,6 +226,36 @@ export function MyItemsTab({ items, onAcceptTrade, currentUserDiscordId, current
           <AlertDialogFooter>
             <AlertDialogCancel className="bg-[#333] border-[#444] text-white hover:bg-[#444]">취소</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 text-white hover:bg-red-700">판매 취소</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cancel Request Alert */}
+      <AlertDialog open={!!cancelItemId} onOpenChange={(open) => !open && setCancelItemId(null)}>
+        <AlertDialogContent className="bg-[#222] border-[#3d3d3d] text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>구매 요청 취소</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              구매 요청을 취소하시겠습니까? 요청 취소는 최대 3회까지만 가능합니다.
+              <br />
+              <span className="text-red-400 text-xs mt-2 block">
+                (현재 취소 횟수: {items.find(i => i.id === cancelItemId)?.cancel_count || 0} / 3)
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-[#333] border-[#444] text-white hover:bg-[#444]">취소</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (cancelItemId && onCancelPurchaseRequest) {
+                  onCancelPurchaseRequest(cancelItemId);
+                  setCancelItemId(null);
+                }
+              }}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              요청 취소
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

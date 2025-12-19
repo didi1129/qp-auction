@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, AlertCircle, Package, MessageSquare } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, AlertCircle, Package, MessageSquare, Heart } from "lucide-react";
 import { Item } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -18,9 +18,11 @@ interface ItemTableProps {
   isLoading?: boolean;
   currentUserDiscordId?: string;
   currentUserId?: string;
+  wishlistIds?: number[];
+  onToggleWishlist?: (itemId: number) => void;
 }
 
-export function ItemTable({ items, onPurchaseRequest, isLoading = false, currentUserDiscordId, currentUserId }: ItemTableProps) {
+export function ItemTable({ items, onPurchaseRequest, isLoading = false, currentUserDiscordId, currentUserId, wishlistIds = [], onToggleWishlist }: ItemTableProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
   const [buyerMessage, setBuyerMessage] = useState("");
@@ -36,7 +38,8 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
   }, [items]);
 
   const totalPages = Math.ceil(items.length / itemsPerPage);
-  const formatUserWithId = (name: string, id?: string) => {
+  const formatUserWithId = (name: string | null | undefined, id?: string | null) => {
+    if (!name) return "-";
     if (!id) return name;
     return (
       <div className="flex flex-col items-center">
@@ -214,6 +217,20 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
                         >
                           {item.name}
                           {item.count && item.count > 1 && <span className="text-gray-400 text-xs text-no-underline">({item.count})</span>}
+                          {/* Wishlist Toggle Button - Hide for own items */}
+                          {item.seller_user_id !== currentUserId && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className={`h-6 w-6 p-0 hover:bg-transparent ml-1 ${wishlistIds.includes(item.id) ? "text-red-500" : "text-gray-500 hover:text-red-400"}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleWishlist?.(item.id);
+                              }}
+                            >
+                              <Heart className={`h-4 w-4 ${wishlistIds.includes(item.id) ? "fill-current" : ""}`} />
+                            </Button>
+                          )}
                           {item.trade_message && (
                             <Popover>
                               <PopoverTrigger asChild>
@@ -262,12 +279,12 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
 
                       {/* Seller */}
                       <TableCell className="text-center text-gray-300 text-sm">
-                        {item.seller ? formatUserWithId(item.seller, item.seller_discord_id) : "-"}
+                        {item.seller || item.seller_discord_id ? formatUserWithId(item.seller, item.seller_discord_id) : "-"}
                       </TableCell>
 
                       {/* Buyer */}
                       <TableCell className="text-center text-gray-300 text-sm">
-                        {item.buyer ? formatUserWithId(item.buyer, item.buyer_discord_id) : "-"}
+                        {item.status === "판매완료" && (item.buyer || item.buyer_discord_id) ? formatUserWithId(item.buyer, item.buyer_discord_id) : "-"}
                       </TableCell>
 
                       {/* Status */}
@@ -325,11 +342,11 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
             </div>
             <div className="ml-auto flex gap-2">
               <Button
-                className={`text-white ${isMyItem ? "bg-gray-600 cursor-not-allowed" : "bg-[oklch(0.6_0.15_240)] hover:bg-[oklch(0.55_0.15_240)]"}`}
+                className={`text-white ${isMyItem || selectedItem.status !== "판매중" ? "bg-gray-600 cursor-not-allowed" : "bg-[oklch(0.6_0.15_240)] hover:bg-[oklch(0.55_0.15_240)]"}`}
                 onClick={() => setIsPurchaseDialogOpen(true)}
-                disabled={isMyItem}
+                disabled={isMyItem || selectedItem.status !== "판매중"}
               >
-                {isMyItem ? "판매 중" : "구매하기"}
+                {isMyItem ? "판매 중" : selectedItem.status === "판매중" ? "구매하기" : selectedItem.status}
               </Button>
             </div>
           </div>
@@ -349,7 +366,7 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
           <AlertDialogHeader>
             <AlertDialogTitle>구매 요청</AlertDialogTitle>
             <AlertDialogDescription className="text-gray-400">
-              {selectedItem?.name} 아이템에 구매 요청을 보내시겠습니까?
+              구매 요청을 보내시겠습니까?
             </AlertDialogDescription>
             <textarea
               className="w-full bg-[#333] border border-[#444] text-white p-2 rounded mt-4 h-24 resize-none focus:outline-none focus:border-[oklch(0.6_0.15_240)] placeholder-gray-500"

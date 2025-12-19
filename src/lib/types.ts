@@ -11,14 +11,16 @@ export interface Item {
   isNew?: boolean;
   category: string;
   image?: string;
-  seller?: string;
-  buyer?: string;
-  status?: "판매중" | "거래대기중" | "거래중" | "판매완료";
-  seller_discord_id?: string;
-  seller_user_id?: string;
-  buyer_discord_id?: string;
+  seller?: string | null;
+  buyer?: string | null;
+  status?: "판매중" | "거래대기중" | "거래중" | "판매완료" | null;
+  seller_discord_id?: string | null;
+  seller_user_id?: string | null;
+  buyer_discord_id?: string | null;
+  buyer_user_id?: string | null;
   item_id?: number;
   trade_message?: string;
+  cancel_count?: number;
 }
 
 export interface Notification {

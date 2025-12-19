@@ -13,6 +13,7 @@ import { supabase } from "@/lib/supabase";
 
 import { CompleteTab } from "@/components/CompleteTab";
 import { MarketPriceTab } from "@/components/MarketPriceTab";
+import { WishlistTab } from "@/components/WishlistTab";
 
 import { User } from "@supabase/supabase-js";
 
@@ -29,6 +30,7 @@ export default function Home() {
   const [completionItemId, setCompletionItemId] = useState<number | null>(null);
   const [searchCriteria, setSearchCriteria] = useState<{ category: string; keyword: string } | null>(null);
   const [priceHistory, setPriceHistory] = useState<Item[]>([]);
+  const [wishlistIds, setWishlistIds] = useState<number[]>([]);
 
   // Auth & Notifications Logic
   useEffect(() => {
@@ -86,6 +88,27 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [user]);
 
+  // Fetch Wishlist
+  useEffect(() => {
+    if (!user) {
+      setWishlistIds([]);
+      return;
+    }
+
+    const fetchWishlist = async () => {
+      const { data, error } = await supabase
+        .from('wishlist')
+        .select('item_id')
+        .eq('user_id', user.id);
+
+      if (data) {
+        setWishlistIds(data.map((w: any) => w.item_id));
+      }
+    };
+
+    fetchWishlist();
+  }, [user]);
+
   // Fetch Items
   useEffect(() => {
     const fetchItems = async () => {
@@ -137,8 +160,10 @@ export default function Home() {
             seller_discord_id: item.seller_discord_id,
             seller_user_id: item.seller_user_id, // Map the UUID
             buyer_discord_id: item.buyer_discord_id,
+            buyer_user_id: item.buyer_user_id,
             item_id: item.item_id, // Link to original item id
             trade_message: item.trade_message,
+            cancel_count: item.cancel_count || 0,
           };
           return mapped;
         });
@@ -303,6 +328,58 @@ export default function Home() {
       )
     );
     alert("판매자에게 구매 요청을 보냈습니다.");
+  };
+
+  const handleCancelPurchaseRequest = async (id: number) => {
+    if (!user) return;
+
+    const item = items.find((i) => i.id === id);
+    if (!item) return;
+
+    const currentCancelCount = item.cancel_count || 0;
+    if (currentCancelCount >= 3) {
+      alert("구매 요청 취소는 최대 3회까지만 가능합니다.");
+      return;
+    }
+
+    // Update Item Status in DB
+    const { error: itemError } = await supabase
+      .from('market_items')
+      .update({
+        status: '판매중',
+        buyer: null,
+        buyer_discord_id: null,
+        buyer_user_id: null,
+        cancel_count: currentCancelCount + 1
+      })
+      .eq('id', id);
+
+    if (itemError) {
+      console.error("Error canceling purchase request:", itemError);
+      alert("구매 요청 취소 실패");
+      return;
+    }
+
+    // Delete the trade request notification sent to the seller
+    await supabase
+      .from('notifications')
+      .delete()
+      .eq('item_id', id)
+      .eq('result_code', 'trade_request');
+
+    // Update Local State
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === id ? {
+          ...i,
+          status: "판매중" as const,
+          buyer: undefined,
+          buyer_discord_id: undefined,
+          cancel_count: currentCancelCount + 1
+        } : i
+      )
+    );
+    alert("구매 요청을 취소했습니다.");
   };
 
   // Seller accepts trade (Triggered from Notification 'Trade' button)
@@ -480,6 +557,50 @@ export default function Home() {
     );
   };
 
+  const handleToggleWishlist = async (itemId: number) => {
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    const targetItem = items.find(i => i.id === itemId);
+    if (targetItem && targetItem.seller_user_id === user.id) {
+      alert("본인이 등록한 아이템은 찜할 수 없습니다.");
+      return;
+    }
+
+    const isWished = wishlistIds.includes(itemId);
+
+    if (isWished) {
+      // Remove
+      const { error } = await supabase
+        .from('wishlist')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('item_id', itemId);
+
+      if (!error) {
+        setWishlistIds(prev => prev.filter(id => id !== itemId));
+      }
+    } else {
+      // Add
+      const { error } = await supabase
+        .from('wishlist')
+        .insert({
+          user_id: user.id,
+          item_id: itemId
+        });
+
+      if (!error) {
+        setWishlistIds(prev => [...prev, itemId]);
+      } else {
+        // Table might not exist error or other
+        console.error("Wishlist toggle error:", error);
+        alert("찜하기 처리 중 오류가 발생했습니다.");
+      }
+    }
+  };
+
   // Search/Filter Logic
   const handleSearch = (category: string, keyword: string) => {
     setSearchCriteria({ category, keyword });
@@ -520,9 +641,22 @@ export default function Home() {
           currentUserId={user?.id}
           onDelete={handleDeleteItem}
           onUpdate={handleUpdateItem}
+          onCancelPurchaseRequest={handleCancelPurchaseRequest}
         />
       ) : activeTab === "market" ? (
         <MarketPriceTab items={priceHistory} />
+      ) : activeTab === "wishlist" ? (
+        <WishlistTab
+          items={items}
+          wishlistIds={wishlistIds}
+          onToggleWishlist={handleToggleWishlist}
+          onPurchaseRequest={(id) => {
+            const item = items.find(i => i.id === id);
+            if (item) {
+              handlePurchaseRequest(id);
+            }
+          }}
+        />
       ) : activeTab === "search" ? (
         <div className="flex flex-1 overflow-hidden">
           <Sidebar onSearch={handleSearch} />
@@ -533,6 +667,8 @@ export default function Home() {
               isLoading={!isLoaded}
               currentUserDiscordId={username}
               currentUserId={user?.id}
+              wishlistIds={wishlistIds}
+              onToggleWishlist={handleToggleWishlist}
             />
           </main>
         </div>
