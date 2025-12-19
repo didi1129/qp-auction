@@ -343,7 +343,13 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
             <div className="ml-auto flex gap-2">
               <Button
                 className={`text-white ${isMyItem || selectedItem.status !== "판매중" ? "bg-gray-600 cursor-not-allowed" : "bg-[oklch(0.6_0.15_240)] hover:bg-[oklch(0.55_0.15_240)]"}`}
-                onClick={() => setIsPurchaseDialogOpen(true)}
+                onClick={() => {
+                  if (!currentUserId) {
+                    alert("로그인이 필요합니다.");
+                    return;
+                  }
+                  setIsPurchaseDialogOpen(true);
+                }}
                 disabled={isMyItem || selectedItem.status !== "판매중"}
               >
                 {isMyItem ? "판매 중" : selectedItem.status === "판매중" ? "구매하기" : selectedItem.status}

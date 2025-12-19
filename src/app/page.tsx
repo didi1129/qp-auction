@@ -55,7 +55,6 @@ export default function Home() {
 
     if (protectedTabs.includes(tab) && !user) {
       alert("로그인이 필요합니다.");
-      setActiveTab("search");
       return;
     }
 
@@ -351,7 +350,10 @@ export default function Home() {
   };
 
   const handleCancelPurchaseRequest = async (id: number) => {
-    if (!user) return;
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
 
     const item = items.find((i) => i.id === id);
     if (!item) return;

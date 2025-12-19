@@ -285,7 +285,13 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
 
               {item.status === '거래대기중' && item.buyer_user_id === user?.id ? (
                 <Button
-                  onClick={() => setIsCancelDialogOpen(true)}
+                  onClick={() => {
+                    if (!user) {
+                      alert("로그인이 필요합니다.");
+                      return;
+                    }
+                    setIsCancelDialogOpen(true);
+                  }}
                   disabled={(item.cancel_count ?? 0) >= 3}
                   className="w-full h-14 text-xl font-bold bg-red-600 hover:bg-red-700"
                 >
@@ -293,7 +299,13 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
                 </Button>
               ) : (
                 <Button
-                  onClick={() => setIsPurchaseDialogOpen(true)}
+                  onClick={() => {
+                    if (!user) {
+                      alert("로그인이 필요합니다.");
+                      return;
+                    }
+                    setIsPurchaseDialogOpen(true);
+                  }}
                   disabled={item.status !== '판매중' || isMyItem}
                   className={`w-full h-14 text-xl font-bold ${item.status === '판매중' && !isMyItem
                     ? "bg-[oklch(0.6_0.15_240)] hover:bg-[oklch(0.55_0.15_240)]"
