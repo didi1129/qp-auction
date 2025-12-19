@@ -180,9 +180,8 @@ export function Header({ activeTab, onTabChange, notifications, onClearNotificat
       {/* Navigation Tabs */}
       <div className="flex items-end px-4 gap-1 bg-[#2a2a2a] border-b border-[#3d3d3d] pt-2">
         <NavTab label="검색" tabId="search" icon={<Search className="h-4 w-4" />} activeTab={activeTab} onClick={onTabChange} />
-        <NavTab label="내 아이템" tabId="myitems" icon={<Box className="h-4 w-4" />} activeTab={activeTab} onClick={onTabChange} />
         <NavTab label="시세" tabId="market" icon={<History className="h-4 w-4" />} activeTab={activeTab} onClick={onTabChange} />
-        <NavTab label="찜목록" tabId="wishlist" icon={<Heart className="h-4 w-4" />} activeTab={activeTab} onClick={onTabChange} />
+        <NavTab label="내 아이템" tabId="myitems" icon={<Box className="h-4 w-4" />} activeTab={activeTab} onClick={onTabChange} />
         <NavTab label="판매" tabId="sell" icon={<ShoppingBag className="h-4 w-4" />} activeTab={activeTab} onClick={onTabChange} />
         <NavTab label="완료" tabId="complete" icon={<CheckSquare className="h-4 w-4" />} activeTab={activeTab} onClick={onTabChange} />
       </div>

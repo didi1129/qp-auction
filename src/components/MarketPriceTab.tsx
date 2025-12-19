@@ -20,6 +20,7 @@ interface MarketItemStats {
   totalTrades: number;
   trend: "up" | "down" | "stable";
   history: Item[];
+  lastSoldAt?: string;
 }
 
 export function MarketPriceTab({ items }: MarketPriceTabProps) {
@@ -76,7 +77,8 @@ export function MarketPriceTab({ items }: MarketPriceTabProps) {
       recentPrice,
       totalTrades: history.length,
       trend,
-      history: sortedHistory
+      history: sortedHistory,
+      lastSoldAt: sortedHistory[0].sold_at
     };
   });
 
@@ -112,6 +114,7 @@ export function MarketPriceTab({ items }: MarketPriceTabProps) {
               <TableHead className="text-center text-gray-300 font-bold">카테고리</TableHead>
               <TableHead className="text-right text-gray-300 font-bold">시장 평균가</TableHead>
               <TableHead className="text-right text-gray-300 font-bold">최근 거래가</TableHead>
+              <TableHead className="text-center text-gray-300 font-bold">최근 거래일</TableHead>
               <TableHead className="text-center text-gray-300 font-bold">누적 거래량</TableHead>
               <TableHead className="text-center text-gray-300 font-bold">추세</TableHead>
             </TableRow>
@@ -142,6 +145,14 @@ export function MarketPriceTab({ items }: MarketPriceTabProps) {
                   </TableCell>
                   <TableCell className="text-right font-bold">
                     {stat.recentPrice.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="text-center text-gray-400 text-[10px] leading-tight">
+                    {stat.lastSoldAt ? (
+                      <>
+                        <div>{new Date(stat.lastSoldAt).toLocaleDateString()}</div>
+                        <div>{new Date(stat.lastSoldAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}</div>
+                      </>
+                    ) : "-"}
                   </TableCell>
                   <TableCell className="text-center">{stat.totalTrades}회</TableCell>
                   <TableCell className="text-center">

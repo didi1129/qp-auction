@@ -248,7 +248,8 @@ export default function Home() {
             image: h.image,
             status: '판매완료',
             item_id: h.item_id,
-            item_gender: h.item_gender
+            item_gender: h.item_gender,
+            sold_at: h.sold_at
           }));
           setPriceHistory(mappedHistory);
         }
@@ -299,7 +300,8 @@ export default function Home() {
       .update({
         status: '거래대기중',
         buyer: buyerNickname,
-        buyer_discord_id: discordHandle // Store Handle (Username)
+        buyer_discord_id: discordHandle, // Store Handle (Username)
+        buyer_user_id: user.id
       })
       .eq('id', item.id);
 
@@ -629,7 +631,7 @@ export default function Home() {
     setActiveTab("search");
   };
   const filteredItems = items.filter((item) => {
-    if (item.status !== "판매중") return false;
+    if (item.status === "판매완료") return false;
     if (!searchCriteria) return true;
 
     const categoryMatch = searchCriteria.category === "전체보기" || item.category === searchCriteria.category;
@@ -665,9 +667,11 @@ export default function Home() {
           onAcceptTrade={handleAcceptTrade}
           currentUserDiscordId={username}
           currentUserId={user?.id}
-          onDelete={handleDeleteItem}
           onUpdate={handleUpdateItem}
           onCancelPurchaseRequest={handleCancelPurchaseRequest}
+          wishlistIds={wishlistIds}
+          onToggleWishlist={handleToggleWishlist}
+          onPurchaseRequest={(id, message) => handlePurchaseRequest(id, message)}
         />
       ) : activeTab === "market" ? (
         <MarketPriceTab items={priceHistory} />
