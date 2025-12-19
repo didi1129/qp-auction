@@ -464,6 +464,22 @@ export default function Home() {
     setNotifications([]);
   };
 
+  const handleMarkAsRead = async (notificationId: string) => {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', Number(notificationId));
+
+    if (error) {
+      console.error("Error marking notification as read:", error);
+      return;
+    }
+
+    setNotifications(prev =>
+      prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+    );
+  };
+
   // Search/Filter Logic
   const handleSearch = (category: string, keyword: string) => {
     setSearchCriteria({ category, keyword });
@@ -490,6 +506,7 @@ export default function Home() {
         onNavigateToComplete={handleNavigateToComplete}
         onAcceptTrade={handleAcceptTrade}
         onDeclineTrade={handleDeclineTrade}
+        onMarkAsRead={handleMarkAsRead}
         user={user}
       />
 

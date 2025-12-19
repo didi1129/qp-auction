@@ -15,10 +15,11 @@ interface HeaderProps {
   onNavigateToComplete: (itemId: number) => void;
   onAcceptTrade: (itemId: number) => void;
   onDeclineTrade: (itemId: number) => void;
+  onMarkAsRead: (notificationId: string) => void;
   user: SupabaseUser | null;
 }
 
-export function Header({ activeTab, onTabChange, notifications, onClearNotifications, onNavigateToComplete, onAcceptTrade, onDeclineTrade, user }: HeaderProps) {
+export function Header({ activeTab, onTabChange, notifications, onClearNotifications, onNavigateToComplete, onAcceptTrade, onDeclineTrade, onMarkAsRead, user }: HeaderProps) {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const handleLogin = async () => {
@@ -66,9 +67,27 @@ export function Header({ activeTab, onTabChange, notifications, onClearNotificat
                     <div className="p-4 text-center text-gray-500 text-sm">새로운 알림이 없습니다.</div>
                   ) : (
                     notifications.map((notif) => (
-                      <div key={notif.id} className="p-3 border-b border-[#333] hover:bg-[#2a2a2a] text-sm">
-                        <div className="text-gray-200">{notif.message}</div>
-                        <div className="text-xs text-gray-500 mt-1">{notif.timestamp}</div>
+                      <div key={notif.id} className={`p-3 border-b border-[#333] hover:bg-[#2a2a2a] text-sm relative ${notif.read ? 'opacity-50' : ''}`}>
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="text-gray-200 flex-1">{notif.message}</div>
+                          {!notif.read && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 shrink-0 text-gray-500 hover:text-yellow-500"
+                              onClick={() => onMarkAsRead(notif.id)}
+                              title="읽음 처리"
+                            >
+                              <CheckSquare className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1 flex gap-1 mt-2 items-center">
+                          <span>{notif.timestamp}</span>
+                          {notif.read && (
+                            <span className="text-[10px] bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded border border-gray-700">읽음</span>
+                          )}
+                        </div>
                         {/* Action Buttons & Badges */}
                         {notif.type === 'trade_request' && notif.itemId && (
                           <div className="flex gap-2 mt-2">
