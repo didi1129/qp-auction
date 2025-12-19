@@ -35,7 +35,7 @@ export function Sidebar({ onSearch }: { onSearch: (category: string, keyword: st
         <Accordion type="single" collapsible className="w-full space-y-1">
           {CATEGORIES.map((cat) => (
             <AccordionItem key={cat} value={cat} className="border border-[#3d3d3d] rounded bg-[#2a2a2a] px-0">
-              <AccordionTrigger className="px-3 py-2 text-sm font-bold text-gray-300 hover:text-white hover:no-underline data-[state=open]:text-white data-[state=open]:bg-[#333] rounded-t">
+              <AccordionTrigger className="px-3 py-2 text-sm font-bold text-gray-300 hover:text-white hover:no-underline data-[state=open]:text-white data-[state=open]:bg-[oklch(0.6_0.15_240)] rounded-t">
                 {cat}
               </AccordionTrigger>
               <AccordionContent className="p-3 bg-[#1a1a1a] border-t border-[#3d3d3d] rounded-b space-y-4">
