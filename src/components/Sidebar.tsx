@@ -5,15 +5,24 @@ import { Search } from "lucide-react";
 import { CATEGORIES } from "@/lib/constants";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
-export function Sidebar({ onSearch }: { onSearch: (category: string, keyword: string) => void }) {
+export function Sidebar({ onSearch }: { onSearch: (category: string, keyword: string, minPrice?: number, maxPrice?: number) => void }) {
   const [keyword, setKeyword] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
 
   const handleSearch = (category: string) => {
-    onSearch(category, keyword);
+    onSearch(category, keyword, minPrice ? Number(minPrice) : undefined, maxPrice ? Number(maxPrice) : undefined);
+  };
+
+  const handleReset = () => {
+    setKeyword("");
+    setMinPrice("");
+    setMaxPrice("");
+    onSearch("전체보기", "", undefined, undefined);
   };
 
   return (
-    <div className="w-[320px] bg-[#222] border-r border-[#3d3d3d] flex flex-col h-[calc(100vh-60px)] overflow-hidden">
+    <div className="w-[320px] bg-[#222] border-r border-[#3d3d3d] flex flex-col h-full overflow-hidden">
       {/* Search Header */}
       <div className="p-3 bg-[#2a2a2a] border-b border-[#3d3d3d]">
         <h2 className="text-sm font-bold text-white flex items-center gap-2">
@@ -50,9 +59,19 @@ export function Sidebar({ onSearch }: { onSearch: (category: string, keyword: st
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-gray-400">가격</label>
                   <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-center">
-                    <Input className="h-8 bg-[#333] text-white border-[#444] text-right text-xs px-2" placeholder="최소" />
+                    <Input
+                      className="h-8 bg-[#333] text-white border-[#444] text-right text-xs px-2 focus:ring-1 focus:ring-[oklch(0.6_0.15_240)]"
+                      placeholder="최소"
+                      value={minPrice}
+                      onChange={(e) => setMinPrice(e.target.value.replace(/[^0-9]/g, ""))}
+                    />
                     <span className="text-gray-500">~</span>
-                    <Input className="h-8 bg-[#333] text-white border-[#444] text-right text-xs px-2" placeholder="최대" />
+                    <Input
+                      className="h-8 bg-[#333] text-white border-[#444] text-right text-xs px-2 focus:ring-1 focus:ring-[oklch(0.6_0.15_240)]"
+                      placeholder="최대"
+                      value={maxPrice}
+                      onChange={(e) => setMaxPrice(e.target.value.replace(/[^0-9]/g, ""))}
+                    />
                   </div>
                 </div>
 
@@ -68,6 +87,17 @@ export function Sidebar({ onSearch }: { onSearch: (category: string, keyword: st
             </AccordionItem>
           ))}
         </Accordion>
+      </div>
+
+      {/* Reset Button at bottom */}
+      <div className="p-4 bg-[#2a2a2a] border-t border-[#3d3d3d]">
+        <Button
+          variant="outline"
+          className="w-full border-[#444] text-gray-400 hover:text-white hover:bg-[#333] text-xs font-bold h-9"
+          onClick={handleReset}
+        >
+          필터 초기화
+        </Button>
       </div>
     </div>
   );

@@ -28,7 +28,7 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [completionItemId, setCompletionItemId] = useState<number | null>(null);
-  const [searchCriteria, setSearchCriteria] = useState<{ category: string; keyword: string; } | null>(null);
+  const [searchCriteria, setSearchCriteria] = useState<{ category: string; keyword: string; minPrice?: number; maxPrice?: number } | null>(null);
   const [priceHistory, setPriceHistory] = useState<Item[]>([]);
   const [wishlistIds, setWishlistIds] = useState<number[]>([]);
 
@@ -624,8 +624,8 @@ export default function Home() {
   };
 
   // Search/Filter Logic
-  const handleSearch = (category: string, keyword: string) => {
-    setSearchCriteria({ category, keyword });
+  const handleSearch = (category: string, keyword: string, minPrice?: number, maxPrice?: number) => {
+    setSearchCriteria({ category, keyword, minPrice, maxPrice });
     setActiveTab("search");
   };
   const filteredItems = items.filter((item) => {
@@ -634,7 +634,9 @@ export default function Home() {
 
     const categoryMatch = searchCriteria.category === "전체보기" || item.category === searchCriteria.category;
     const keywordMatch = !searchCriteria.keyword || item.name.toLowerCase().includes(searchCriteria.keyword.toLowerCase());
-    return categoryMatch && keywordMatch;
+    const minPriceMatch = !searchCriteria.minPrice || item.price >= searchCriteria.minPrice;
+    const maxPriceMatch = !searchCriteria.maxPrice || item.price <= searchCriteria.maxPrice;
+    return categoryMatch && keywordMatch && minPriceMatch && maxPriceMatch;
   });
 
   const username = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Unknown";
