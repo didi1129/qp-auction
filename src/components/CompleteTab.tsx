@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { Item } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Upload, AlertCircle } from "lucide-react";
+import Image from "next/image";
 
 interface CompleteTabProps {
   item: Item | null;
@@ -47,7 +48,7 @@ export function CompleteTab({ item, onComplete, onNavigateToMyItems }: CompleteT
         <div className="flex gap-4 p-4 bg-[#2a2a2a] rounded border border-[#333]">
           <div className="w-16 h-16 bg-[#1a1a1a] border border-[#444] rounded flex items-center justify-center">
             {item.image ? (
-              <span className="text-xs">IMG</span>
+              <Image src={item.image} alt={item.name} width={64} height={74} />
             ) : (
               <span className="text-xs">IMG</span>
             )}
@@ -57,7 +58,7 @@ export function CompleteTab({ item, onComplete, onNavigateToMyItems }: CompleteT
             <span className="text-gray-400 text-sm">판매자: {item.seller} <span className="text-xs text-gray-500">({item.seller_discord_id || "ID 없음"})</span></span>
             <span className="text-gray-300 text-sm">구매자: {item.buyer || "(구매 요청자)"} <span className="text-xs text-gray-500">({item.buyer_discord_id || "-"})</span></span>
             <span className="text-yellow-500 font-bold">{item.price.toLocaleString()} 메소</span>
-            <p className="text-xs text-gray-500"><AlertCircle className="inline-block h-4 w-4" /> 가격을 흥정했을 경우 <Button variant='link' onClick={(e) => { e.preventDefault(); onNavigateToMyItems?.(); }} className="text-blue-500 hover:underline">[내 아이템]</Button>에서 가격을 수정한 뒤 진행해주세요.</p>
+            <p className="text-xs text-gray-500"><AlertCircle className="inline-block h-4 w-4" /> 가격을 흥정했을 경우 <Button variant='link' onClick={(e) => { e.preventDefault(); onNavigateToMyItems?.(); }} className="text-blue-500 hover:underline px-0 text-xs">[내 아이템]</Button>에서 가격을 수정한 뒤 진행해주세요.</p>
           </div>
         </div>
 

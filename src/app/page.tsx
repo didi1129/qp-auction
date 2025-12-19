@@ -344,7 +344,8 @@ export default function Home() {
           ...item,
           status: "거래대기중" as const,
           buyer: buyerNickname,
-          buyer_discord_id: discordHandle
+          buyer_discord_id: discordHandle,
+          buyer_user_id: user.id
         } : item
       )
     );
@@ -499,6 +500,21 @@ export default function Home() {
           : item
       )
     );
+
+    // 4. Automatically remove from buyer's wishlist if they are the one who bought it
+    const buyerUserId = item.buyer_user_id;
+    if (buyerUserId) {
+      const { error: wishError } = await supabase
+        .from('wishlist')
+        .delete()
+        .eq('user_id', buyerUserId)
+        .eq('item_id', itemId);
+
+      if (!wishError && user && user.id === buyerUserId) {
+        setWishlistIds(prev => prev.filter(id => id !== itemId));
+      }
+    }
+
     alert("거래가 성공적으로 완료되었습니다!");
     setCompletionItemId(null);
     setActiveTab("search"); // Go back to list to see the update
