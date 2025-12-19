@@ -103,8 +103,12 @@ export function MarketPriceTab({ items }: MarketPriceTabProps) {
               marketStats.map((stat) => (
                 <TableRow key={stat.name} className="border-[#333] hover:bg-[#2a2a2a]">
                   <TableCell className="font-bold flex items-center gap-2">
-                    <div className="w-8 h-8 bg-[#222] rounded border border-[#444] flex items-center justify-center text-[10px] text-gray-500">
-                      IMG
+                    <div className="w-8 h-8 bg-[#222] rounded border border-[#444] flex items-center justify-center overflow-hidden">
+                      {stat.image ? (
+                        <img src={stat.image} alt={stat.name} className="w-full h-full object-contain" />
+                      ) : (
+                        <div className="text-[10px] text-gray-500">IMG</div>
+                      )}
                     </div>
                     {stat.name}
                   </TableCell>

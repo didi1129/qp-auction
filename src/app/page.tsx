@@ -28,6 +28,7 @@ export default function Home() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [completionItemId, setCompletionItemId] = useState<number | null>(null);
   const [searchCriteria, setSearchCriteria] = useState<{ category: string; keyword: string } | null>(null);
+  const [priceHistory, setPriceHistory] = useState<Item[]>([]);
 
   // Auth & Notifications Logic
   useEffect(() => {
@@ -97,12 +98,19 @@ export default function Home() {
         console.error("Error fetching items:", error);
       } else if (data && data.length > 0) {
         // Map backend view structure to Frontend Item type
-        const mappedItems: Item[] = data.map((item: any) => {
+        const expiredIds: number[] = [];
+        const rawMapped = data.map((item: any) => {
           // Calculate time left (24 hours from created_at)
           const createdAt = new Date(item.created_at);
           const expireTime = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000);
           const now = new Date();
           const diffMs = expireTime.getTime() - now.getTime();
+
+          const isExpired = diffMs <= 0;
+          if (isExpired && (item.status === "판매중" || item.status === "판매완료")) {
+            expiredIds.push(item.market_id);
+            return null;
+          }
 
           let timeLeftStr = "만료됨";
           if (diffMs > 0) {
@@ -113,7 +121,7 @@ export default function Home() {
             timeLeftStr = "0분";
           }
 
-          return {
+          const mapped: Item = {
             id: item.market_id, // Map market_id to id
             name: item.name,
             price: item.price,
@@ -131,7 +139,23 @@ export default function Home() {
             buyer_discord_id: item.buyer_discord_id,
             item_id: item.item_id, // Link to original item id
           };
+          return mapped;
         });
+
+        const mappedItems: Item[] = rawMapped.filter((item): item is Item => item !== null);
+
+        // Delete expired items from DB
+        if (expiredIds.length > 0) {
+          console.log("Removing expired items from market:", expiredIds);
+          supabase
+            .from('market_items')
+            .delete()
+            .in('id', expiredIds)
+            .then(({ error }) => {
+              if (error) console.error("Error deleting expired items:", error);
+            });
+        }
+
         setItems(mappedItems);
       }
       setIsLoaded(true);
@@ -139,6 +163,44 @@ export default function Home() {
 
     fetchItems();
   }, []);
+
+  // Fetch Price History
+  useEffect(() => {
+    const fetchPriceHistory = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('market_price_history')
+          .select('*')
+          .order('sold_at', { ascending: false });
+
+        if (error) {
+          // Table might not exist yet, ignore quietly or log but don't break UI
+          console.warn("Market history fetch skipped or failed:", error.message);
+          return;
+        }
+
+        if (data) {
+          const mappedHistory: Item[] = data.map((h: any) => ({
+            id: h.id,
+            name: h.name,
+            category: h.category,
+            price: h.price,
+            count: h.count,
+            seller: h.seller,
+            buyer: h.buyer,
+            image: h.image,
+            status: '판매완료',
+            item_id: h.item_id
+          }));
+          setPriceHistory(mappedHistory);
+        }
+      } catch (e) {
+        console.error("Price history fetch error:", e);
+      }
+    };
+
+    fetchPriceHistory();
+  }, [items]);
 
   // Buyer requests purchase
   const handlePurchaseRequest = async (id: number, message?: string) => {
@@ -281,6 +343,9 @@ export default function Home() {
   };
 
   const handleCompleteTrade = async (itemId: number) => {
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+
     // Update Item Status in DB to 'Completed'
     await supabase
       .from('market_items')
@@ -289,6 +354,21 @@ export default function Home() {
         // Buyer info is already set during purchase request
       })
       .eq('id', itemId);
+
+    // Insert into market_price_history for persistent market tracking
+    await supabase
+      .from('market_price_history')
+      .insert({
+        item_id: item.item_id,
+        name: item.name,
+        category: item.category,
+        price: item.price,
+        count: item.count,
+        seller: item.seller,
+        buyer: item.buyer,
+        image: item.image,
+        sold_at: new Date().toISOString()
+      });
 
     // Update Notification Status to 'trade_complete'
     await supabase
@@ -399,7 +479,7 @@ export default function Home() {
           onUpdate={handleUpdateItem}
         />
       ) : activeTab === "market" ? (
-        <MarketPriceTab items={items} />
+        <MarketPriceTab items={[...items, ...priceHistory]} />
       ) : activeTab === "search" ? (
         <div className="flex flex-1 overflow-hidden">
           <Sidebar onSearch={handleSearch} />
