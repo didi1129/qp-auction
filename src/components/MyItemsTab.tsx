@@ -112,8 +112,8 @@ export function MyItemsTab({
                       <span className="font-bold text-white truncate text-sm">{item.name}</span>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold border ${item.status === '판매중' ? 'bg-green-950 text-green-400 border-green-900' :
-                            item.status === '판매완료' ? 'bg-gray-800 text-gray-500 border-gray-700' :
-                              'bg-yellow-950 text-yellow-400 border-yellow-900'
+                          item.status === '판매완료' ? 'bg-gray-800 text-gray-500 border-gray-700' :
+                            'bg-yellow-950 text-yellow-400 border-yellow-900'
                           }`}>
                           {item.status === '판매완료' ? '거래완료' : item.status}
                         </span>
@@ -137,7 +137,7 @@ export function MyItemsTab({
                 </div>
 
                 <div className="flex flex-col gap-1 px-1 py-1 bg-[#1a1a1a]/50 rounded text-[11px]">
-                  <div className="flex justify-between items-center text-gray-400">
+                  <div className="flex gap-1 items-center text-gray-400">
                     <span>판매자: <span className="text-gray-300">{item.seller}</span></span>
                     {item.seller_discord_id && <span className="bg-[#333] px-1 rounded text-[9px]">{item.seller_discord_id}</span>}
                   </div>
@@ -174,8 +174,8 @@ export function MyItemsTab({
                       <span className="font-bold text-white truncate text-sm">{item.name}</span>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold border ${item.status === '판매중' ? 'bg-green-950 text-green-400 border-green-900' :
-                            item.status === '판매완료' ? 'bg-gray-800 text-gray-500 border-gray-700' :
-                              'bg-yellow-950 text-yellow-400 border-yellow-900'
+                          item.status === '판매완료' ? 'bg-gray-800 text-gray-500 border-gray-700' :
+                            'bg-yellow-950 text-yellow-400 border-yellow-900'
                           }`}>
                           {item.status}
                         </span>
@@ -200,7 +200,7 @@ export function MyItemsTab({
                 </div>
 
                 <div className="flex flex-col gap-1 px-1 py-1 bg-[#1a1a1a]/50 rounded text-[11px]">
-                  <div className="flex justify-between items-center text-gray-400">
+                  <div className="flex gap-1 items-center text-gray-400">
                     <span>
                       {item.status === '판매완료' ? '구매자: ' : '신청자: '}
                       <span className="text-gray-300">{item.buyer || (item.status === '판매중' ? '-' : '요청 없음')}</span>
@@ -277,7 +277,7 @@ export function MyItemsTab({
                 </div>
 
                 <div className="flex flex-col gap-1 px-1 py-1 bg-[#1a1a1a]/50 rounded text-[11px]">
-                  <div className="flex justify-between items-center text-gray-400">
+                  <div className="flex gap-1 items-center text-gray-400">
                     <span>판매자: <span className="text-gray-300">{item.seller}</span></span>
                     {item.seller_discord_id && <span className="bg-[#333] px-1 rounded text-[9px]">{item.seller_discord_id}</span>}
                   </div>
