@@ -90,7 +90,7 @@ export function MarketPriceTab({ items }: MarketPriceTabProps) {
         </h2>
         <div className="text-xs text-gray-400 flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-orange-500" />
-          <span>큐플옥션에서의 거래 내역에 기반한 시세입니다. 참고용으로만 봐주세요.</span>
+          <span>큐플옥션에서의 거래 내역에 기반한 시세입니다.</span>
         </div>
       </div>
 
