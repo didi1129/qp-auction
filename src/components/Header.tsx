@@ -47,7 +47,7 @@ export function Header({ activeTab, onTabChange, notifications, onClearNotificat
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-2 text-gray-400">
             {/* Notification Popover */}
-            <Popover>
+            {user ? <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative text-gray-400 hover:text-white">
                   <Bell className="h-5 w-5" />
@@ -119,7 +119,7 @@ export function Header({ activeTab, onTabChange, notifications, onClearNotificat
                   )}
                 </div>
               </PopoverContent>
-            </Popover>
+            </Popover> : null}
 
             {user ? (
               <DropdownMenu>

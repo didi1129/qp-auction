@@ -145,12 +145,25 @@ export default function Home() {
         const mappedItems: Item[] = rawMapped.filter((item): item is Item => item !== null);
 
         // Delete expired items from DB
-        if (expiredIds.length > 0) {
+        if (expiredIds.length > 0 && data.length > 0) {
           console.log("Removing expired items from market:", expiredIds);
+
+          // First, delete related notifications to avoid foreign key constraint error
           supabase
-            .from('market_items')
+            .from('notifications')
             .delete()
-            .in('id', expiredIds)
+            .in('item_id', expiredIds)
+            .then(({ error: notifError }) => {
+              if (notifError) {
+                console.error("Error deleting notifications for expired items:", notifError);
+              }
+
+              // Then, delete the items themselves
+              return supabase
+                .from('market_items')
+                .delete()
+                .in('id', expiredIds);
+            })
             .then(({ error }) => {
               if (error) console.error("Error deleting expired items:", error);
             });
@@ -391,6 +404,18 @@ export default function Home() {
 
   // User deletes their own item
   const handleDeleteItem = async (itemId: number) => {
+    // First, delete related notifications to avoid foreign key constraint error
+    const { error: notifError } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('item_id', itemId);
+
+    if (notifError) {
+      console.error("Error deleting notifications for item:", notifError);
+      // We continue anyway, as the notifications might not exist or the trigger might handle it,
+      // but usually we want to make sure the main deletion doesn't fail.
+    }
+
     const { error } = await supabase
       .from('market_items')
       .delete()
