@@ -138,6 +138,7 @@ export default function Home() {
             seller_user_id: item.seller_user_id, // Map the UUID
             buyer_discord_id: item.buyer_discord_id,
             item_id: item.item_id, // Link to original item id
+            trade_message: item.trade_message,
           };
           return mapped;
         });
@@ -504,7 +505,7 @@ export default function Home() {
           onUpdate={handleUpdateItem}
         />
       ) : activeTab === "market" ? (
-        <MarketPriceTab items={[...items, ...priceHistory]} />
+        <MarketPriceTab items={priceHistory} />
       ) : activeTab === "search" ? (
         <div className="flex flex-1 overflow-hidden">
           <Sidebar onSearch={handleSearch} />
@@ -522,6 +523,7 @@ export default function Home() {
         <CompleteTab
           item={items.find(i => i.id === completionItemId) || null}
           onComplete={handleCompleteTrade}
+          onNavigateToMyItems={() => setActiveTab("myitems")}
         />
       ) : (
         <div className="flex items-center justify-center flex-1 text-gray-500">

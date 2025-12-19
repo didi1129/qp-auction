@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
+import Image from "next/image";
 
 interface MyItemsTabProps {
   items: Item[];
@@ -21,10 +22,12 @@ export function MyItemsTab({ items, onAcceptTrade, currentUserDiscordId, current
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
   const [newPrice, setNewPrice] = useState("");
+  const [newTradeMessage, setNewTradeMessage] = useState("");
 
   const handleEditClick = (item: Item) => {
     setEditingItem(item);
     setNewPrice(item.price.toString());
+    setNewTradeMessage(item.trade_message || "");
   };
 
   const handleDeleteClick = (itemId: number) => {
@@ -33,7 +36,10 @@ export function MyItemsTab({ items, onAcceptTrade, currentUserDiscordId, current
 
   const handleUpdateConfirm = () => {
     if (editingItem && onUpdate) {
-      onUpdate(editingItem.id, { price: Number(newPrice) });
+      onUpdate(editingItem.id, {
+        price: Number(newPrice),
+        trade_message: newTradeMessage
+      });
       setEditingItem(null);
     }
   };
@@ -72,7 +78,11 @@ export function MyItemsTab({ items, onAcceptTrade, currentUserDiscordId, current
               <div key={item.id} className="bg-[#2a2a2a] p-3 mb-2 rounded border border-[#333] flex justify-between items-center">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-[#1a1a1a] rounded border border-[#444] flex items-center justify-center">
-                    <Package className="text-gray-600 h-5 w-5" />
+                    {
+                      item.image ? (<Image src={item.image} alt={item.name} width={64} height={74} />)
+                        :
+                        <Package className="text-gray-600 h-5 w-5" />
+                    }
                   </div>
                   <div className="flex flex-col">
                     <span className="font-bold text-white">{item.name}</span>
@@ -83,18 +93,6 @@ export function MyItemsTab({ items, onAcceptTrade, currentUserDiscordId, current
                   <span className={`text-sm font-bold ${item.status === '거래중' ? 'text-blue-500' : 'text-yellow-500'}`}>
                     {item.status}
                   </span>
-
-                  {/* DEMO BUTTON TO SIMULATE SELLER ACCEPTING */}
-                  {item.status === "거래대기중" && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs border-green-700 text-green-500 hover:bg-green-900"
-                      onClick={() => onAcceptTrade(item.id)}
-                    >
-                      (TEST) 판매자 수락 시뮬레이션
-                    </Button>
-                  )}
                 </div>
               </div>
             ))
@@ -112,26 +110,44 @@ export function MyItemsTab({ items, onAcceptTrade, currentUserDiscordId, current
             <div className="text-center text-gray-500 mt-10">판매 등록한 아이템이 없습니다.</div>
           ) : (
             mySales.map(item => (
-              <div key={item.id} className="bg-[#2a2a2a] p-3 mb-2 rounded border border-[#333] flex justify-between items-center">
-                <div className="flex flex-col">
-                  <span className="font-bold">{item.name}</span>
-                  <span className="text-xs text-gray-400">{Number(item.price).toLocaleString()} 메소</span>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <span className="text-xs bg-[#333] px-2 py-1 rounded">{item.status}</span>
-                  {item.status === '판매완료' ? (
-                    item.buyer && <span className="text-xs text-gray-400">구매자: {item.buyer}</span>
-                  ) : (
-                    <div className="flex gap-1 mt-1">
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-white" onClick={() => handleEditClick(item)}>
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-red-500" onClick={() => handleDeleteClick(item.id)}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+              <div key={item.id}>
+                <div className="bg-[#2a2a2a] p-3 mb-2 rounded border border-[#333] flex justify-between items-center relative z-0">
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 bg-[#1a1a1a] rounded border border-[#444] flex items-center justify-center">
+                      {
+                        item.image ? (<Image src={item.image} alt={item.name} width={64} height={74} />)
+                          :
+                          <Package className="text-gray-600 h-5 w-5" />
+                      }
                     </div>
-                  )}
+                    <div className="flex flex-col">
+                      <span className="font-bold">{item.name}</span>
+                      <span className="text-xs text-gray-400">{Number(item.price).toLocaleString()} 메소</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="text-xs bg-[#333] px-2 py-1 rounded">{item.status}</span>
+                    {item.status === '판매완료' ? (
+                      item.buyer && <span className="text-xs text-gray-400">구매자: {item.buyer}</span>
+                    ) : (
+                      <div className="flex gap-1 mt-1">
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-white" onClick={() => handleEditClick(item)}>
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-red-500" onClick={() => handleDeleteClick(item.id)}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
+                {item.trade_message && (
+                  <div className="bg-[#1a1a1a] p-2 mt-[-8px] mb-2 rounded-b border-x border-b border-[#333] text-xs text-yellow-500/80 italic flex items-start gap-2">
+                    <span className="shrink-0 font-bold">[거래 메시지]</span>
+                    <span className="break-words line-clamp-2">{item.trade_message}</span>
+                  </div>
+                )}
               </div>
             ))
           )}
@@ -147,13 +163,26 @@ export function MyItemsTab({ items, onAcceptTrade, currentUserDiscordId, current
               수정할 가격을 입력해주세요.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <Input
-              type="number"
-              value={newPrice}
-              onChange={(e) => setNewPrice(e.target.value)}
-              className="bg-[#333] border-[#444] text-white"
-            />
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-400">판매 가격 (메소)</label>
+              <Input
+                type="number"
+                value={newPrice}
+                onChange={(e) => setNewPrice(e.target.value)}
+                className="bg-[#333] border-[#444] text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-400">거래 메시지</label>
+              <textarea
+                className="w-full bg-[#333] border border-[#444] text-white p-3 rounded h-24 resize-none focus:outline-none focus:border-[oklch(0.6_0.15_240)] placeholder-gray-500 text-sm"
+                placeholder="거래 시 참고할 메시지"
+                value={newTradeMessage}
+                onChange={(e) => setNewTradeMessage(e.target.value.slice(0, 100))}
+              />
+              <p className="text-[10px] text-gray-500 text-right">{newTradeMessage.length}/100</p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setEditingItem(null)}>취소</Button>
@@ -178,6 +207,6 @@ export function MyItemsTab({ items, onAcceptTrade, currentUserDiscordId, current
         </AlertDialogContent>
       </AlertDialog>
 
-    </div>
+    </div >
   );
 }

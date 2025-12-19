@@ -8,9 +8,10 @@ import { CheckCircle, Upload, AlertCircle } from "lucide-react";
 interface CompleteTabProps {
   item: Item | null;
   onComplete: (itemId: number) => void;
+  onNavigateToMyItems?: () => void;
 }
 
-export function CompleteTab({ item, onComplete }: CompleteTabProps) {
+export function CompleteTab({ item, onComplete, onNavigateToMyItems }: CompleteTabProps) {
   const [hasScreenshot, setHasScreenshot] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -56,6 +57,7 @@ export function CompleteTab({ item, onComplete }: CompleteTabProps) {
             <span className="text-gray-400 text-sm">판매자: {item.seller} <span className="text-xs text-gray-500">({item.seller_discord_id || "ID 없음"})</span></span>
             <span className="text-gray-300 text-sm">구매자: {item.buyer || "(구매 요청자)"} <span className="text-xs text-gray-500">({item.buyer_discord_id || "-"})</span></span>
             <span className="text-yellow-500 font-bold">{item.price.toLocaleString()} 메소</span>
+            <p className="text-xs text-gray-500"><AlertCircle className="inline-block h-4 w-4" /> 가격을 흥정했을 경우 <Button variant='link' onClick={(e) => { e.preventDefault(); onNavigateToMyItems?.(); }} className="text-blue-500 hover:underline">[내 아이템]</Button>에서 가격을 수정한 뒤 진행해주세요.</p>
           </div>
         </div>
 

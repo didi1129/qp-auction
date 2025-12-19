@@ -19,6 +19,7 @@ export function SellTab({ onRegister, user }: SellTabProps) {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [price, setPrice] = useState("");
+  const [tradeMessage, setTradeMessage] = useState("");
 
   const handleSearch = async (term: string) => {
     setSearchTerm(term);
@@ -49,41 +50,8 @@ export function SellTab({ onRegister, user }: SellTabProps) {
     const globalName = user.user_metadata?.custom_claims?.global_name;
     const username = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "Unknown";
 
-    // User requested: Nickname = global_name, ID = username (full_name)
     const sellerName = globalName || username;
-    const discordHandle = username; // This is the "ID" user wants to show (username)
-
-    // Note: discordId (snowflake) was used for 'seller_discord_id' previously, 
-    // but user wants "Discord ID (username)" to be displayed.
-    // However, 'seller_discord_id' implies the ID used for looking up the user or linking?
-    // If I change this to username, valid 'discord_id' columns in DB (if constrained) might fail?
-    // DB 'seller_discord_id' is TEXT. So it's fine.
-    // But 'target_user_discord_id' in notifications is used for filtering?
-    // Wait, in page.tsx I use `user.identities...id` (Snowflake) for `discordId` variable to FILTER notifications.
-    // If I start saving Username (handle) into `seller_discord_id`, then `fetchNotifications` which uses Snowflake ID will match NOTHING?
-    // 
-    // Let's check `page.tsx`.
-    // `const discordId = user.identities?.find((id: any) => id.provider === 'discord')?.id;` <- Snowflake.
-    // `fetchNotifications` queries `eq('target_user_discord_id', discordId)`.
-    //
-    // Issue: If I change `seller_discord_id` to be "Username (Handle)", then notification fetching (using Snowflake) breaks.
-    // User said: "Display Buyer/Seller ID in Complete Tab".
-    // User said: "Current fetched nickname is Discord ID (username)".
-    // User wants: "Nickname" = Global Name. "ID" = Username.
-    // They probably want me to DISPLAY the username as the "ID", but maybe keep Snowflake for internal logic?
-    // OR they want me to use Username for everything?
-    // "buyer_discord_id" column is used for display in Complete Tab.
-    // It is also used for internal logic? 
-    // `fetchNotifications` uses `target_user_id` (UUID) now (I just updated it!).
-    // So `seller_discord_id` is LESS critical for logic now, mostly for display?
-    // BUT `fetchNotifications` fallback/legacy might still use it?
-    // 
-    // In `page.tsx` step 816: `fetchNotifications` uses `target_user_id`.
-    // So changing `seller_discord_id` to username/handle is SAFE for notifications logic IF user_id is populated.
-    // 
-    // So I will store:
-    // seller: globalName
-    // seller_discord_id: username (Handle)
+    const discordHandle = username;
 
     const { data, error } = await supabase
       .from('market_items')
@@ -92,12 +60,12 @@ export function SellTab({ onRegister, user }: SellTabProps) {
         seller: sellerName,
         seller_discord_id: discordHandle,
         user_id: user.id,
-        user_id: user.id,
         price: Number(price),
         count: 1,
         status: "판매중",
         "timeLeft": "24시간 00분",
-        "isNew": true
+        "isNew": true,
+        trade_message: tradeMessage
       })
       .select()
       .single();
@@ -108,8 +76,6 @@ export function SellTab({ onRegister, user }: SellTabProps) {
       return;
     }
 
-    // Transform DB result to Item type for frontend state update if necessary
-    // But ideally valid, we trigger a refresh. For now, passing mapped item.
     const newItem: Item = {
       id: data.id,
       name: selectedItem.name,
@@ -124,13 +90,15 @@ export function SellTab({ onRegister, user }: SellTabProps) {
       seller_discord_id: data.seller_discord_id,
       seller_user_id: user.id,
       image: selectedItem.image,
-      item_id: selectedItem.id
+      item_id: selectedItem.id,
+      trade_message: data.trade_message
     };
 
     onRegister(newItem);
     alert(`${selectedItem.name}이(가) ${Number(price).toLocaleString()} 메소에 24시간 동안 등록되었습니다.`);
     setSelectedItem(null);
     setPrice("");
+    setTradeMessage("");
     setSearchTerm("");
     setSearchResults([]);
   };
@@ -229,6 +197,15 @@ export function SellTab({ onRegister, user }: SellTabProps) {
               <Clock className="h-4 w-4 text-gray-400" />
               24시간 00분
             </div>
+
+            <label className="text-gray-400 font-bold">거래 메시지</label>
+            <textarea
+              className="bg-[#333] text-white border border-[#444] p-3 rounded h-24 resize-none focus:outline-none focus:border-[oklch(0.6_0.15_240)] placeholder-gray-500 text-sm"
+              placeholder="예: 연락주세요, 흥정 가능합니다 (100자 이내)"
+              value={tradeMessage}
+              onChange={(e) => setTradeMessage(e.target.value.slice(0, 100))}
+              disabled={!selectedItem}
+            />
           </div>
 
           <div className="flex justify-end gap-2 pt-4 border-t border-[#3d3d3d]">

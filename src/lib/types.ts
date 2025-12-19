@@ -18,6 +18,7 @@ export interface Item {
   seller_user_id?: string;
   buyer_discord_id?: string;
   item_id?: number;
+  trade_message?: string;
 }
 
 export interface Notification {

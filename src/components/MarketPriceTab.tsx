@@ -74,9 +74,9 @@ export function MarketPriceTab({ items }: MarketPriceTabProps) {
         <h2 className="text-xl font-bold text-yellow-500 flex items-center gap-2">
           <History className="h-6 w-6" /> 시세 조회
         </h2>
-        <div className="text-sm text-gray-400 flex items-center gap-2">
+        <div className="text-xs text-gray-400 flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-orange-500" />
-          <span>시세 조작 방지를 위해 상/하위 20%의 이상치는 평균 계산에서 제외됩니다.</span>
+          <span>큐플옥션에서의 거래 내역에 기반한 시세입니다. 참고용으로만 봐주세요.</span>
         </div>
       </div>
 

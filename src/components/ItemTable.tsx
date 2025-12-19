@@ -4,10 +4,11 @@ import { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, AlertCircle, Package } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, AlertCircle, Package, MessageSquare } from "lucide-react";
 import { Item } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -213,6 +214,24 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
                         >
                           {item.name}
                           {item.count && item.count > 1 && <span className="text-gray-400 text-xs text-no-underline">({item.count})</span>}
+                          {item.trade_message && (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button
+                                  className="p-1 hover:bg-[#444] rounded text-yellow-500 transition-colors"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MessageSquare className="h-4 w-4" />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="bg-[#2a2a2a] border-[#444] text-white p-3 text-sm max-w-[250px] break-words shadow-xl z-[100]">
+                                <div className="font-bold text-yellow-500 mb-1 flex items-center gap-1">
+                                  <MessageSquare className="h-3 w-3" /> 거래 메시지
+                                </div>
+                                {item.trade_message}
+                              </PopoverContent>
+                            </Popover>
+                          )}
                         </div>
                       </TableCell>
 

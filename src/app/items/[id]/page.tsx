@@ -5,34 +5,44 @@ import { supabase } from "@/lib/supabase";
 import { Item } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { ChevronLeft, Info, Shield, Star, Clock, User, Sword } from "lucide-react";
+import { ChevronLeft, Info, Package, MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Header } from "@/components/Header";
-// Note: We might need a separate Header or reuse the one from page.tsx but strictly speaking 
-// reusing Header in a sub-page might require prop drilling or context unless we simplified Header. 
-// For now, I'll make a simplified header or just a back button header for the detail page 
-// to avoid complex state coupling (notifications, tabs etc) which resides in the main page.
-// Or better, I'll just put a minimal header.
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 
 export default function ItemDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const [item, setItem] = useState<Item | null>(null);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
+  const [buyerMessage, setBuyerMessage] = useState("");
   const router = useRouter();
 
   useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+    };
+
     const fetchItem = async () => {
       const { data, error } = await supabase
         .from('market_listings')
         .select('*')
-        .eq('market_id', resolvedParams.id) // Query by market_id
+        .eq('market_id', resolvedParams.id)
         .single();
 
       if (error) {
         console.error("Error fetching item:", error);
       } else {
-        // Map to Item type
         const mappedItem: Item = {
           id: data.market_id,
           name: data.name,
@@ -45,15 +55,82 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
           image: data.image,
           seller: data.seller,
           status: data.status,
-          // Additional fields logic
+          seller_user_id: data.seller_user_id,
+          seller_discord_id: data.seller_discord_id,
+          item_id: data.item_id,
+          trade_message: data.trade_message,
         };
         setItem(mappedItem);
       }
       setLoading(false);
     };
 
+    fetchUser();
     fetchItem();
   }, [resolvedParams.id]);
+
+  const handlePurchaseRequest = async () => {
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    if (!item) return;
+
+    if (item.seller_user_id === user.id) {
+      alert("본인의 아이템은 구매할 수 없습니다.");
+      setIsPurchaseDialogOpen(false);
+      return;
+    }
+
+    const globalName = user.user_metadata?.custom_claims?.global_name;
+    const username = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "Unknown";
+    const buyerNickname = globalName || username;
+    const discordHandle = username;
+
+    const { error: updateError } = await supabase
+      .from('market_items')
+      .update({
+        status: '거래대기중',
+        buyer: buyerNickname,
+        buyer_discord_id: discordHandle
+      })
+      .eq('id', item.id);
+
+    if (updateError) {
+      console.error("Error updating item status:", updateError);
+      alert("상태 업데이트 실패");
+      return;
+    }
+
+    const notificationMessage = buyerMessage
+      ? `구매 요청: ${buyerNickname}님이 '${item.name}' 구매를 희망합니다.\n"${buyerMessage}"`
+      : `구매 요청: ${buyerNickname}님이 '${item.name}' 구매를 희망합니다.`;
+
+    const { error } = await supabase
+      .from('notifications')
+      .insert({
+        item_id: item.id,
+        target_user_discord_id: item.seller_discord_id,
+        target_user_id: item.seller_user_id,
+        sender_user_discord_id: discordHandle,
+        message: notificationMessage,
+        buyer_message: buyerMessage || null,
+        result_code: 'trade_request',
+        is_read: false
+      });
+
+    if (error) {
+      console.error("Error sending notification:", error);
+      alert("구매 요청 전송 실패");
+      return;
+    }
+
+    setItem(prev => prev ? { ...prev, status: '거래대기중' } : null);
+    setIsPurchaseDialogOpen(false);
+    setBuyerMessage("");
+    alert("판매자에게 구매 요청을 보냈습니다.");
+  };
 
   if (loading) {
     return <div className="flex h-screen items-center justify-center bg-[#1a1a1a] text-white">Loading...</div>;
@@ -68,6 +145,8 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
     );
   }
 
+  const isMyItem = user?.id === item.seller_user_id;
+
   return (
     <div className="flex flex-col min-h-screen bg-[#1a1a1a] text-white">
       {/* Simple Header */}
@@ -80,92 +159,117 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
 
       <div className="flex-1 p-6 max-w-4xl mx-auto w-full">
         <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-8">
-          {/* Image Section */}
-          <div className="flex flex-col gap-4">
+          {/* Left Column: Image and Main Info */}
+          <div className="flex flex-col gap-6">
             <div className="aspect-square bg-[#222] border border-[#444] rounded-lg flex items-center justify-center relative overflow-hidden">
               {item.image ? (
                 <img
                   src={item.image}
                   alt={item.name}
                   className="max-w-full max-h-full object-contain p-4"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                    (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                  }}
                 />
               ) : (
-                <div className="text-4xl text-gray-600 font-bold">IMG</div>
+                <Package className="h-20 w-20 text-gray-600" />
               )}
 
-              {/* Fallback Text if image fails to load */}
-              {item.image && <div className="hidden absolute inset-0 flex items-center justify-center text-4xl text-gray-600 font-bold bg-[#222]">IMG</div>}
-
-              {/* Level Requirement Badge */}
               {(item.level ?? 0) > 0 && (
                 <div className="absolute top-2 right-2 bg-black/50 px-2 py-1 rounded text-xs text-yellow-500 font-bold border border-yellow-500/30">
                   Lv.{item.level}
                 </div>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-[#2a2a2a] p-3 rounded border border-[#333] flex flex-col items-center">
-                <span className="text-xs text-gray-400">판매자</span>
-                <span className="font-bold text-sm truncate w-full text-center">{item.seller}</span>
-              </div>
-              <div className="bg-[#2a2a2a] p-3 rounded border border-[#333] flex flex-col items-center">
-                <span className="text-xs text-gray-400">남은 시간</span>
-                <span className="font-bold text-sm text-yellow-500">{item.timeLeft || "24:00"}</span>
-              </div>
-            </div>
-          </div>
 
-          {/* Info Section */}
-          <div className="flex flex-col gap-6">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Badge variant="outline" className="text-gray-400 border-gray-600">{item.category}</Badge>
-                {item.status === '판매완료' && <Badge variant="destructive">판매완료</Badge>}
-                {item.status === '거래중' && <Badge className="bg-blue-600 hover:bg-blue-700">거래중</Badge>}
+            {/* Title & Price (Moved below image) */}
+            <div className="space-y-4">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-gray-400 border-gray-600 w-fit">{item.category}</Badge>
+                  {item.status === '판매완료' && <Badge variant="destructive">판매완료</Badge>}
+                  {item.status === '거래중' && <Badge className="bg-blue-600 hover:bg-blue-700">거래중</Badge>}
+                  {item.status === '거래대기중' && <Badge className="bg-yellow-600">거래대기중</Badge>}
+                </div>
+                <h1 className="text-3xl font-bold">{item.name}</h1>
               </div>
-              <h1 className="text-3xl font-bold mb-2">{item.name}</h1>
-              <div className="text-2xl font-bold text-yellow-500 flex items-end gap-2">
+
+              <div className="text-3xl font-bold text-yellow-500 flex items-end gap-2 bg-[#222] p-4 rounded-lg border border-[#333]">
                 {item.price.toLocaleString()} <span className="text-sm font-normal text-gray-400 mb-1">메소</span>
               </div>
             </div>
+          </div>
 
-            <div className="bg-[#222] border border-[#333] rounded-lg p-4 space-y-3">
-              <h3 className="font-bold flex items-center gap-2 border-b border-[#333] pb-2 text-gray-200">
-                <Info className="h-4 w-4 text-[oklch(0.6_0.15_240)]" /> 기본 정보
-              </h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">스타포스</span>
-                  <span>0 ★</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">잠재옵션 등급</span>
-                  <span className="text-gray-500">없음</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">가위 사용 가능 횟수</span>
-                  <span>10회</span>
-                </div>
+          {/* Right Column: Meta Info & Actions */}
+          <div className="flex flex-col gap-6">
+            {/* Seller & Time Info */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-[#222] p-4 rounded-lg border border-[#333] flex flex-col gap-1">
+                <span className="text-xs text-gray-400">판매자</span>
+                <span className="font-bold text-lg truncate">{item.seller}</span>
+              </div>
+              <div className="bg-[#222] p-4 rounded-lg border border-[#333] flex flex-col gap-1">
+                <span className="text-xs text-gray-400">남은 시간</span>
+                <span className="font-bold text-lg text-yellow-500">{item.timeLeft || "24:00"}</span>
               </div>
             </div>
 
-            <div className="bg-[#222] border border-[#333] rounded-lg p-4 space-y-3">
-              <h3 className="font-bold flex items-center gap-2 border-b border-[#333] pb-2 text-gray-200">
-                <Sword className="h-4 w-4 text-red-500" /> 추가 옵션
-              </h3>
-              <p className="text-sm text-gray-500 text-center py-4">추가 옵션이 없습니다.</p>
-            </div>
+            {item.trade_message && (
+              <div className="bg-[#2a3f4a]/30 p-4 rounded-lg border border-[#2a3f4a] space-y-2">
+                <h3 className="text-sm font-bold text-yellow-500 flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" /> 판매자 거래 메시지
+                </h3>
+                <p className="text-sm text-gray-300 leading-relaxed break-words">
+                  {item.trade_message}
+                </p>
+              </div>
+            )}
 
-            <Button className="w-full h-12 text-lg font-bold bg-[oklch(0.6_0.15_240)] hover:bg-[oklch(0.55_0.15_240)] mt-auto">
-              {item.status === '판매중' ? '구매하기' : '거래 불가'}
-            </Button>
+            <div className="mt-auto space-y-4">
+              <div className="flex items-center gap-2 text-gray-400 text-sm bg-[#222]/50 p-3 rounded-lg border border-[#333]/50">
+                <Info className="h-4 w-4" />
+                <span>
+                  {isMyItem ? "본인이 등록한 아이템입니다." : "판매자와 조율 후 거래를 진행해 주세요."}
+                </span>
+              </div>
+
+              <Button
+                onClick={() => setIsPurchaseDialogOpen(true)}
+                disabled={item.status !== '판매중' || isMyItem}
+                className={`w-full h-14 text-xl font-bold ${item.status === '판매중' && !isMyItem
+                  ? "bg-[oklch(0.6_0.15_240)] hover:bg-[oklch(0.55_0.15_240)]"
+                  : "bg-gray-700 cursor-not-allowed"
+                  }`}
+              >
+                {isMyItem ? "본인 아이템" : item.status === '판매중' ? "구매 요청" : item.status}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
+
+      <AlertDialog open={isPurchaseDialogOpen} onOpenChange={setIsPurchaseDialogOpen}>
+        <AlertDialogContent className="bg-[#222] border-[#3d3d3d] text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>구매 요청</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              {item.name} 아이템에 구매 요청을 보내시겠습니까?
+            </AlertDialogDescription>
+            <textarea
+              className="w-full bg-[#333] border border-[#444] text-white p-2 rounded mt-4 h-24 resize-none focus:outline-none focus:border-[oklch(0.6_0.15_240)] placeholder-gray-500"
+              placeholder="판매자에게 보낼 메시지를 입력하세요 (선택사항)"
+              value={buyerMessage}
+              onChange={(e) => setBuyerMessage(e.target.value)}
+            />
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-[#333] border-[#444] text-white hover:bg-[#444] hover:text-white" onClick={() => setBuyerMessage("")}>취소</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handlePurchaseRequest}
+              className="bg-[oklch(0.6_0.15_240)] text-white hover:bg-[oklch(0.55_0.15_240)]"
+            >
+              구매 요청
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
