@@ -21,6 +21,7 @@ export interface Item {
   item_id?: number;
   trade_message?: string;
   cancel_count?: number;
+  item_gender?: string | null;
 }
 
 export interface Notification {

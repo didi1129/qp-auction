@@ -1,8 +1,11 @@
 "use client";
 
 import { Item } from "@/lib/types";
-import { History, TrendingUp, AlertTriangle } from "lucide-react";
+import { History, TrendingUp, AlertTriangle, Search, Filter } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface MarketPriceTabProps {
   items: Item[];
@@ -20,11 +23,20 @@ interface MarketItemStats {
 }
 
 export function MarketPriceTab({ items }: MarketPriceTabProps) {
-  // 1. Filter sold items
-  const soldItems = items.filter(item => item.status === "판매완료");
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // 2. Group by item name
-  const groupedItems = soldItems.reduce((acc, item) => {
+  // 1. Filter sold items
+  let filteredRawItems = items.filter(item => item.status === "판매완료");
+
+  // 2. Apply search and gender filters
+  if (searchTerm) {
+    filteredRawItems = filteredRawItems.filter(item =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
+
+  // 3. Group by item name
+  const groupedItems = filteredRawItems.reduce((acc, item) => {
     if (!acc[item.name]) {
       acc[item.name] = [];
     }
@@ -77,6 +89,18 @@ export function MarketPriceTab({ items }: MarketPriceTabProps) {
         <div className="text-xs text-gray-400 flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-orange-500" />
           <span>큐플옥션에서의 거래 내역에 기반한 시세입니다. 참고용으로만 봐주세요.</span>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-4 bg-[#1a1a1a] p-3 rounded border border-[#3d3d3d]">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+          <Input
+            placeholder="아이템 이름으로 검색..."
+            className="pl-9 bg-[#222] border-[#3d3d3d] text-white focus:ring-yellow-500"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
       </div>
 

@@ -28,7 +28,7 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [completionItemId, setCompletionItemId] = useState<number | null>(null);
-  const [searchCriteria, setSearchCriteria] = useState<{ category: string; keyword: string } | null>(null);
+  const [searchCriteria, setSearchCriteria] = useState<{ category: string; keyword: string; } | null>(null);
   const [priceHistory, setPriceHistory] = useState<Item[]>([]);
   const [wishlistIds, setWishlistIds] = useState<number[]>([]);
 
@@ -48,6 +48,19 @@ export default function Home() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const handleTabChange = (tab: string) => {
+    // Protected tabs
+    const protectedTabs = ["myitems", "wishlist", "sell", "complete"];
+
+    if (protectedTabs.includes(tab) && !user) {
+      alert("로그인이 필요합니다.");
+      setActiveTab("search");
+      return;
+    }
+
+    setActiveTab(tab);
+  };
 
   // Poll for notifications
   useEffect(() => {
@@ -92,6 +105,11 @@ export default function Home() {
   useEffect(() => {
     if (!user) {
       setWishlistIds([]);
+      // If user logs out while on protected tab, redirect to search
+      if (activeTab === "myitems") {
+        setActiveTab("search");
+        alert("로그인이 필요합니다.");
+      }
       return;
     }
 
@@ -164,6 +182,7 @@ export default function Home() {
             item_id: item.item_id, // Link to original item id
             trade_message: item.trade_message,
             cancel_count: item.cancel_count || 0,
+            item_gender: item.item_gender
           };
           return mapped;
         });
@@ -229,7 +248,8 @@ export default function Home() {
             buyer: h.buyer,
             image: h.image,
             status: '판매완료',
-            item_id: h.item_id
+            item_id: h.item_id,
+            item_gender: h.item_gender
           }));
           setPriceHistory(mappedHistory);
         }
@@ -604,13 +624,15 @@ export default function Home() {
   // Search/Filter Logic
   const handleSearch = (category: string, keyword: string) => {
     setSearchCriteria({ category, keyword });
+    setActiveTab("search");
   };
-
   const filteredItems = items.filter((item) => {
+    if (item.status !== "판매중") return false;
     if (!searchCriteria) return true;
-    const matchesCategory = item.category === searchCriteria.category;
-    const matchesKeyword = item.name.toLowerCase().includes(searchCriteria.keyword.toLowerCase());
-    return matchesCategory && matchesKeyword;
+
+    const categoryMatch = searchCriteria.category === "전체보기" || item.category === searchCriteria.category;
+    const keywordMatch = !searchCriteria.keyword || item.name.toLowerCase().includes(searchCriteria.keyword.toLowerCase());
+    return categoryMatch && keywordMatch;
   });
 
   const username = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Unknown";
@@ -621,7 +643,7 @@ export default function Home() {
     <div className="flex flex-col h-screen bg-[#1a1a1a] text-white overflow-hidden">
       <Header
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         notifications={notifications}
         onClearNotifications={handleClearNotifications}
         onNavigateToComplete={handleNavigateToComplete}

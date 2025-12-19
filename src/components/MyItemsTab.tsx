@@ -96,9 +96,16 @@ export function MyItemsTab({ items, onAcceptTrade, currentUserDiscordId, current
                     <span className="font-bold text-white">
                       {item.name} {item.status === '판매완료' && <span className="text-gray-500 font-normal">(거래완료)</span>}
                     </span>
-                    <span className="text-xs text-gray-400">
-                      {item.seller} ({item.seller_discord_id}) {item.trade_message && <span className="text-yellow-500/80 ml-1 italic font-medium">| [메시지: {item.trade_message}]</span>}
-                    </span>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs text-gray-400">
+                        {Number(item.price).toLocaleString()} 메소 | {item.seller} ({item.seller_discord_id})
+                      </span>
+                      {item.trade_message && (
+                        <span className="text-[10px] text-yellow-500/80 italic font-medium break-words line-clamp-1">
+                          [판매 메시지: {item.trade_message}]
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
