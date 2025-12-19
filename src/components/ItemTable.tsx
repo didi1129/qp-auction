@@ -171,10 +171,10 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
                     <TableRow
                       key={item.id}
                       className={`
-                        border-[#333] transition-colors h-[50px]
-                        ${!isSelling ? "opacity-50 pointer-events-none bg-[#1a1a1a]" : "cursor-pointer hover:bg-[#333]"}
-                        ${selectedId === item.id ? "bg-[#2a3f4a] hover:bg-[#2a3f4a] border-l-2 border-l-[oklch(0.6_0.15_240)]" : ""}
-                    `}
+                          border-[#333] transition-colors h-[50px]
+                          ${!isSelling ? "opacity-50 bg-[#1a1a1a]" : "cursor-pointer hover:bg-[#333]"}
+                          ${selectedId === item.id ? "bg-[#2a3f4a] hover:bg-[#2a3f4a] border-l-2 border-l-[oklch(0.6_0.15_240)]" : ""}
+                      `}
                       onClick={() => isSelling && setSelectedId(item.id)}
                     >
                       {/* Image Column */}

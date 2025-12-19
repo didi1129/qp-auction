@@ -102,34 +102,49 @@ export function MyItemsTab({
             <div className="text-center text-gray-500 mt-10">구매 요청한 아이템이 없습니다.</div>
           ) : (
             myRequests.map(item => (
-              <div key={item.id} className="bg-[#2a2a2a] p-3 mb-2 rounded border border-[#333] flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-[#1a1a1a] rounded border border-[#444] flex items-center justify-center">
-                    {item.image ? (<Image src={item.image} alt={item.name} width={64} height={74} />) : <Package className="text-gray-600 h-5 w-5" />}
+              <div key={item.id} className={`bg-[#2a2a2a] p-3 mb-2 rounded border border-[#333] flex flex-col gap-2 ${item.status === '판매완료' ? 'opacity-50 grayscale' : ''}`}>
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-[#1a1a1a] rounded border border-[#444] flex items-center justify-center shrink-0">
+                      {item.image ? (<Image src={item.image} alt={item.name} width={64} height={74} />) : <Package className="text-gray-600 h-6 w-6" />}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-bold text-white truncate text-sm">{item.name}</span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold border ${item.status === '판매중' ? 'bg-green-950 text-green-400 border-green-900' :
+                            item.status === '판매완료' ? 'bg-gray-800 text-gray-500 border-gray-700' :
+                              'bg-yellow-950 text-yellow-400 border-yellow-900'
+                          }`}>
+                          {item.status === '판매완료' ? '거래완료' : item.status}
+                        </span>
+                        <span className="text-yellow-500 font-bold text-xs">{Number(item.price).toLocaleString()}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-white">
-                      {item.name} {item.status === '판매완료' && <span className="text-gray-500 font-normal">(거래완료)</span>}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {Number(item.price).toLocaleString()} 메소 | {item.seller}
-                    </span>
+                  <div className="flex gap-1">
+                    {item.status === '거래대기중' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-red-400 hover:text-red-500 hover:bg-red-500/10 text-[10px] font-bold"
+                        onClick={() => setCancelItemId(item.id)}
+                        disabled={(item.cancel_count ?? 0) >= 3}
+                      >
+                        취소
+                      </Button>
+                    )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs font-bold ${item.status === '거래중' ? 'text-blue-500' : item.status === '판매완료' ? 'text-gray-500' : 'text-yellow-500'}`}>
-                    {item.status === '판매완료' ? '거래완료' : item.status}
-                  </span>
-                  {item.status === '거래대기중' && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-2 text-red-400 hover:text-red-500 hover:bg-red-500/10 text-xs"
-                      onClick={() => setCancelItemId(item.id)}
-                      disabled={(item.cancel_count ?? 0) >= 3}
-                    >
-                      취소
-                    </Button>
+
+                <div className="flex flex-col gap-1 px-1 py-1 bg-[#1a1a1a]/50 rounded text-[11px]">
+                  <div className="flex justify-between items-center text-gray-400">
+                    <span>판매자: <span className="text-gray-300">{item.seller}</span></span>
+                    {item.seller_discord_id && <span className="bg-[#333] px-1 rounded text-[9px]">{item.seller_discord_id}</span>}
+                  </div>
+                  {item.trade_message && (
+                    <div className="text-blue-400 leading-tight italic line-clamp-1">
+                      "{item.trade_message}"
+                    </div>
                   )}
                 </div>
               </div>
@@ -149,34 +164,54 @@ export function MyItemsTab({
             <div className="text-center text-gray-500 mt-10">판매 등록한 아이템이 없습니다.</div>
           ) : (
             mySales.map(item => (
-              <div key={item.id} className="mb-2">
-                <div className="bg-[#2a2a2a] p-3 rounded border border-[#333] flex justify-between items-center">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-[#1a1a1a] rounded border border-[#444] flex items-center justify-center">
-                      {item.image ? (<Image src={item.image} alt={item.name} width={64} height={74} />) : <Package className="text-gray-600 h-5 w-5" />}
+              <div key={item.id} className={`bg-[#2a2a2a] p-3 mb-2 rounded border border-[#333] flex flex-col gap-2 ${item.status === '판매완료' ? 'opacity-50 grayscale' : ''}`}>
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-[#1a1a1a] rounded border border-[#444] flex items-center justify-center shrink-0">
+                      {item.image ? (<Image src={item.image} alt={item.name} width={64} height={74} />) : <Package className="text-gray-600 h-6 w-6" />}
                     </div>
-                    <div className="flex flex-col">
-                      <span className="font-bold">{item.name}</span>
-                      <span className="text-xs text-gray-400">{Number(item.price).toLocaleString()} 메소</span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-bold text-white truncate text-sm">{item.name}</span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold border ${item.status === '판매중' ? 'bg-green-950 text-green-400 border-green-900' :
+                            item.status === '판매완료' ? 'bg-gray-800 text-gray-500 border-gray-700' :
+                              'bg-yellow-950 text-yellow-400 border-yellow-900'
+                          }`}>
+                          {item.status}
+                        </span>
+                        <span className="text-yellow-500 font-bold text-xs">{Number(item.price).toLocaleString()}</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${item.status === '판매중' ? 'bg-green-900 text-green-200' : 'bg-gray-800 text-gray-400'}`}>
-                      {item.status}
-                    </span>
+                  <div className="flex gap-1">
                     {item.status === '판매완료' ? (
-                      item.buyer && <span className="text-[10px] text-gray-400">구매자: {item.buyer}</span>
+                      <span className="text-[10px] text-gray-500 font-bold self-center px-2">완료</span>
                     ) : (
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-white" onClick={() => handleEditClick(item)}>
-                          <Pencil className="h-3 w-3" />
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-white" onClick={() => handleEditClick(item)}>
+                          <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-red-500" onClick={() => handleDeleteClick(item.id)}>
-                          <Trash2 className="h-3 w-3" />
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-red-500" onClick={() => handleDeleteClick(item.id)}>
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     )}
                   </div>
+                </div>
+
+                <div className="flex flex-col gap-1 px-1 py-1 bg-[#1a1a1a]/50 rounded text-[11px]">
+                  <div className="flex justify-between items-center text-gray-400">
+                    <span>
+                      {item.status === '판매완료' ? '구매자: ' : '신청자: '}
+                      <span className="text-gray-300">{item.buyer || (item.status === '판매중' ? '-' : '요청 없음')}</span>
+                    </span>
+                    {item.buyer_discord_id && <span className="bg-[#333] px-1 rounded text-[9px]">{item.buyer_discord_id}</span>}
+                  </div>
+                  {item.trade_message && (
+                    <div className="text-blue-400 leading-tight italic line-clamp-1">
+                      "{item.trade_message}"
+                    </div>
+                  )}
                 </div>
               </div>
             ))
@@ -195,38 +230,61 @@ export function MyItemsTab({
             <div className="text-center text-gray-500 mt-10">찜한 아이템이 없습니다.</div>
           ) : (
             myWishlist.map(item => (
-              <div key={item.id} className={`bg-[#2a2a2a] p-3 mb-2 rounded border border-[#333] flex justify-between items-center ${item.status === '판매완료' ? 'opacity-40 grayscale' : ''}`}>
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 bg-[#1a1a1a] rounded border border-[#444] flex items-center justify-center">
-                    {item.image ? (<Image src={item.image} alt={item.name} width={64} height={74} />) : <Package className="text-gray-600 h-5 w-5" />}
+              <div key={item.id} className={`bg-[#2a2a2a] p-3 mb-2 rounded border border-[#333] flex flex-col gap-2 ${item.status === '판매완료' ? 'opacity-50 grayscale' : ''}`}>
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-[#1a1a1a] rounded border border-[#444] flex items-center justify-center shrink-0">
+                      {item.image ? (<Image src={item.image} alt={item.name} width={64} height={74} />) : <Package className="text-gray-600 h-6 w-6" />}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-bold text-white truncate text-sm">{item.name}</span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold border ${item.status === '판매중' ? 'bg-green-950 text-green-400 border-green-900' :
+                          item.status === '판매완료' ? 'bg-gray-800 text-gray-500 border-gray-700' :
+                            'bg-yellow-950 text-yellow-400 border-yellow-900'
+                          }`}>
+                          {item.status}
+                        </span>
+                        <span className="text-yellow-500 font-bold text-xs">{Number(item.price).toLocaleString()}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-white truncate max-w-[120px]">{item.name}</span>
-                    <span className="text-xs text-yellow-500">{Number(item.price).toLocaleString()}</span>
+                  <div className="flex gap-1">
+                    {onPurchaseRequest && (
+                      <Button
+                        size="sm"
+                        disabled={item.status !== '판매중'}
+                        className={`${item.status === '판매중' ? 'bg-[oklch(0.6_0.15_240)] hover:bg-[oklch(0.55_0.15_240)]' : 'bg-gray-700'} text-white text-[10px] h-7 px-2`}
+                        onClick={() => {
+                          setPurchaseRequestItemId(item.id);
+                          setPurchaseRequestMessage("");
+                        }}
+                      >
+                        {item.status === '판매중' ? '요청' : '진행중'}
+                      </Button>
+                    )}
+                    {onToggleWishlist && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-gray-500 hover:text-red-500"
+                        onClick={() => onToggleWishlist(item.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
-                <div className="flex gap-1">
-                  {item.status === '판매중' && onPurchaseRequest && (
-                    <Button
-                      size="sm"
-                      className="bg-[oklch(0.6_0.15_240)] hover:bg-[oklch(0.55_0.15_240)] text-white text-[10px] h-7 px-2"
-                      onClick={() => {
-                        setPurchaseRequestItemId(item.id);
-                        setPurchaseRequestMessage("");
-                      }}
-                    >
-                      요청
-                    </Button>
-                  )}
-                  {onToggleWishlist && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-gray-500 hover:text-red-500"
-                      onClick={() => onToggleWishlist(item.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+
+                <div className="flex flex-col gap-1 px-1 py-1 bg-[#1a1a1a]/50 rounded text-[11px]">
+                  <div className="flex justify-between items-center text-gray-400">
+                    <span>판매자: <span className="text-gray-300">{item.seller}</span></span>
+                    {item.seller_discord_id && <span className="bg-[#333] px-1 rounded text-[9px]">{item.seller_discord_id}</span>}
+                  </div>
+                  {item.trade_message && (
+                    <div className="text-blue-400 leading-tight italic line-clamp-2">
+                      "{item.trade_message}"
+                    </div>
                   )}
                 </div>
               </div>
