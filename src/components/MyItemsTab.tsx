@@ -299,7 +299,7 @@ export function MyItemsTab({
           <DialogHeader><DialogTitle>판매 정보 수정</DialogTitle></DialogHeader>
           <div className="py-4 space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-400">판매 가격 (메소)</label>
+              <label className="text-sm font-medium text-gray-400">판매 가격 (사이버머니)</label>
               <Input type="number" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} className="bg-[#333] border-[#444] text-white" />
             </div>
             <div className="space-y-2">

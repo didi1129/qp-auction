@@ -57,7 +57,7 @@ export function CompleteTab({ item, onComplete, onNavigateToMyItems }: CompleteT
             <span className="font-bold text-lg">{item.name}</span>
             <span className="text-gray-400 text-sm">판매자: {item.seller} <span className="text-xs text-gray-500">({item.seller_discord_id || "ID 없음"})</span></span>
             <span className="text-gray-300 text-sm">구매자: {item.buyer || "(구매 요청자)"} <span className="text-xs text-gray-500">({item.buyer_discord_id || "-"})</span></span>
-            <span className="text-yellow-500 font-bold">{item.price.toLocaleString()} 메소</span>
+            <span className="text-yellow-500 font-bold">{item.price.toLocaleString()} 원</span>
             <p className="text-xs text-gray-500"><AlertCircle className="inline-block h-4 w-4" /> 가격을 흥정했을 경우 <Button variant='link' onClick={(e) => { e.preventDefault(); onNavigateToMyItems?.(); }} className="text-blue-500 hover:underline px-0 text-xs">[내 아이템]</Button>에서 가격을 수정한 뒤 진행해주세요.</p>
           </div>
         </div>

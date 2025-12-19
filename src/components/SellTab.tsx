@@ -95,7 +95,7 @@ export function SellTab({ onRegister, user }: SellTabProps) {
     };
 
     onRegister(newItem);
-    alert(`${selectedItem.name}이(가) ${Number(price).toLocaleString()} 메소에 24시간 동안 등록되었습니다.`);
+    alert(`${selectedItem.name}이(가) ${Number(price).toLocaleString()} 원에 등록되었습니다.`);
     setSelectedItem(null);
     setPrice("");
     setTradeMessage("");
@@ -189,7 +189,7 @@ export function SellTab({ onRegister, user }: SellTabProps) {
                 onChange={(e) => setPrice(e.target.value)}
                 disabled={!selectedItem}
               />
-              <span className="absolute right-3 top-2.5 text-gray-400 text-sm">메소</span>
+              <span className="absolute right-3 top-2.5 text-gray-400 text-sm">원</span>
             </div>
 
             <label className="text-gray-400 font-bold">등록 시간</label>
@@ -223,8 +223,7 @@ export function SellTab({ onRegister, user }: SellTabProps) {
         <div className="bg-[#2a2a2a] p-4 text-xs text-gray-400 rounded">
           <ul className="list-disc pl-4 space-y-1">
             <li>아이템은 등록 후 24시간 동안 판매됩니다.</li>
-            <li>판매 완료 시 수수료 5%가 차감된 금액을 수령할 수 있습니다.</li>
-            <li>등록된 아이템은 언제든지 취소할 수 있습니다.</li>
+            <li>판매 등록한 아이템은 취소할 수 있습니다.</li>
           </ul>
         </div>
       </div>

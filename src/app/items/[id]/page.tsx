@@ -245,7 +245,7 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
               </div>
 
               <div className="text-3xl font-bold text-yellow-500 flex items-end gap-2 bg-[#222] p-4 rounded-lg border border-[#333]">
-                {item.price.toLocaleString()} <span className="text-sm font-normal text-gray-400 mb-1">메소</span>
+                {item.price.toLocaleString()} <span className="text-sm font-normal text-gray-400 mb-1">원</span>
               </div>
             </div>
           </div>

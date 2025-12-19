@@ -102,7 +102,7 @@ export function WishlistTab({ items, wishlistIds, onToggleWishlist, onPurchaseRe
                       </div>
                     </TableCell>
                     <TableCell className="text-right font-bold text-yellow-500">
-                      {item.price.toLocaleString()} 메소
+                      {item.price.toLocaleString()} 원
                     </TableCell>
                     <TableCell className="text-center text-gray-400 text-xs">
                       <div className="flex items-center justify-center gap-1">
