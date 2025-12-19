@@ -130,16 +130,19 @@ export default function Home() {
   useEffect(() => {
     const fetchItems = async () => {
       const { data, error } = await supabase
-        .from('market_listings')
-        .select('*')
+        .from('market_items')
+        .select('*, items_info(*)')
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error("Error fetching items:", error);
       } else if (data && data.length > 0) {
-        // Map backend view structure to Frontend Item type
+        // Map backend structure to Frontend Item type
         const expiredIds: number[] = [];
         const rawMapped = data.map((item: any) => {
+          const itemInfo = item.items_info;
+          if (!itemInfo) return null;
+
           // Calculate time left (24 hours from created_at)
           const createdAt = new Date(item.created_at);
           const expireTime = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000);
@@ -148,7 +151,7 @@ export default function Home() {
 
           const isExpired = diffMs <= 0;
           if (isExpired && (item.status === "판매중" || item.status === "판매완료")) {
-            expiredIds.push(item.market_id);
+            expiredIds.push(item.id);
             return null;
           }
 
@@ -162,34 +165,35 @@ export default function Home() {
           }
 
           const mapped: Item = {
-            id: item.market_id, // Map market_id to id
-            name: item.name,
+            id: item.id,
+            name: itemInfo.name,
             price: item.price,
-            level: 0, // Default or fetch if available in view
-            category: item.category,
+            level: itemInfo.level || 0,
+            category: itemInfo.category,
             count: item.count,
             timeLeft: timeLeftStr,
             isNew: item.isNew,
-            image: item.image,
+            image: itemInfo.image,
             seller: item.seller,
             buyer: item.buyer,
             status: item.status,
             seller_discord_id: item.seller_discord_id,
-            seller_user_id: item.seller_user_id, // Map the UUID
+            seller_user_id: item.user_id, // In market_items it's 'user_id'
             buyer_discord_id: item.buyer_discord_id,
             buyer_user_id: item.buyer_user_id,
-            item_id: item.item_id, // Link to original item id
+            item_id: item.item_id,
             trade_message: item.trade_message,
             cancel_count: item.cancel_count || 0,
-            item_gender: item.item_gender
+            item_gender: itemInfo.gender
           };
           return mapped;
         });
 
         const mappedItems: Item[] = rawMapped.filter((item): item is Item => item !== null);
+        setItems(mappedItems);
 
         // Delete expired items from DB
-        if (expiredIds.length > 0 && data.length > 0) {
+        if (expiredIds.length > 0) {
           console.log("Removing expired items from market:", expiredIds);
 
           // First, delete related notifications to avoid foreign key constraint error
@@ -212,8 +216,9 @@ export default function Home() {
               if (error) console.error("Error deleting expired items:", error);
             });
         }
-
-        setItems(mappedItems);
+      } else {
+        // No items found in DB, clear mock items for logged-in users
+        setItems([]);
       }
       setIsLoaded(true);
     };
@@ -522,10 +527,12 @@ export default function Home() {
 
   // User updates their own item (e.g. price change)
   const handleUpdateItem = async (itemId: number, updates: Partial<Item>) => {
+    // DB Update
     const { error } = await supabase
       .from('market_items')
       .update({
-        price: updates.price, // Only price support for now
+        price: updates.price,
+        trade_message: updates.trade_message,
       })
       .eq('id', itemId);
 
@@ -535,9 +542,12 @@ export default function Home() {
       return;
     }
 
+    // Local State Update
     setItems((prev) =>
       prev.map((item) =>
-        item.id === itemId ? { ...item, ...updates } : item
+        String(item.id) === String(itemId)
+          ? { ...item, ...updates }
+          : item
       )
     );
     alert("아이템 정보가 수정되었습니다.");

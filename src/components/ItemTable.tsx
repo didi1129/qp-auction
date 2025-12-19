@@ -206,7 +206,7 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
                       {/* Name Column */}
                       <TableCell className="text-white font-medium max-w-[250px] pl-0">
                         <div
-                          className="flex items-center gap-2 cursor-pointer hover:underline hover:text-yellow-500 transition-colors truncate w-fit"
+                          className="flex items-center gap-2 cursor-pointer hover:underline hover:text-yellow-500 transition-colors w-fit"
                           onClick={(e) => {
                             e.stopPropagation();
                             router.push(`/items/${item.id}`);

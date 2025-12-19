@@ -36,27 +36,28 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
 
     const fetchItem = async () => {
       const { data, error } = await supabase
-        .from('market_listings')
-        .select('*')
-        .eq('market_id', resolvedParams.id)
+        .from('market_items')
+        .select('*, items_info(*)')
+        .eq('id', resolvedParams.id)
         .single();
 
       if (error) {
         console.error("Error fetching item:", error);
       } else {
+        const itemInfo = data.items_info;
         const mappedItem: Item = {
-          id: data.market_id,
-          name: data.name,
+          id: data.id,
+          name: itemInfo?.name || "알 수 없는 아이템",
           price: data.price,
-          level: 0,
-          category: data.category,
+          level: itemInfo?.level || 0,
+          category: itemInfo?.category || "일반",
           count: data.count,
           timeLeft: data.timeLeft,
           isNew: data.isNew,
-          image: data.image,
+          image: itemInfo?.image,
           seller: data.seller,
           status: data.status,
-          seller_user_id: data.seller_user_id,
+          seller_user_id: data.user_id,
           seller_discord_id: data.seller_discord_id,
           item_id: data.item_id,
           trade_message: data.trade_message,
