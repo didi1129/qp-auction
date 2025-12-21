@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { cn, formatRelativeTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -92,7 +93,7 @@ export function Header({ activeTab, onTabChange, notifications, onClearNotificat
                           )}
                         </div>
                         <div className="text-xs text-gray-500 mt-1 flex gap-1 mt-2 items-center">
-                          <span>{notif.timestamp}</span>
+                          <span>{formatRelativeTime(notif.timestamp)}</span>
                           {notif.read && (
                             <span className="text-[10px] bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded border border-gray-700">읽음</span>
                           )}

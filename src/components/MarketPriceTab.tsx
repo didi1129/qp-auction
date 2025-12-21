@@ -1,6 +1,7 @@
 "use client";
 
 import { Item } from "@/lib/types";
+import { formatRelativeTime } from "@/lib/utils";
 import { History, TrendingUp, AlertTriangle, Search, Filter, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useState, useEffect } from "react";
@@ -181,12 +182,7 @@ export function MarketPriceTab({ items }: MarketPriceTabProps) {
                     {stat.recentPrice.toLocaleString()}
                   </TableCell>
                   <TableCell className="text-center text-gray-400 text-[10px] leading-tight">
-                    {stat.lastSoldAt ? (
-                      <>
-                        <div>{new Date(stat.lastSoldAt).toLocaleDateString()}</div>
-                        <div>{new Date(stat.lastSoldAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}</div>
-                      </>
-                    ) : "-"}
+                    {stat.lastSoldAt ? formatRelativeTime(stat.lastSoldAt) : "-"}
                   </TableCell>
                   <TableCell className="text-center">{stat.totalTrades}회</TableCell>
                   <TableCell className="text-center">

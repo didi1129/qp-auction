@@ -83,7 +83,7 @@ export default function Home() {
         const mappedNotifs: Notification[] = data.map((n: any) => ({
           id: n.id.toString(),
           message: n.message,
-          timestamp: new Date(n.created_at).toLocaleTimeString(),
+          timestamp: n.created_at,
           read: n.is_read,
           itemId: n.item_id,
           type: n.result_code === 'trade_request' ? 'trade_request' :
