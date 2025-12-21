@@ -217,7 +217,7 @@ export function MyItemsTab({
                 <div className="flex flex-col gap-1 px-1 py-1 bg-[#1a1a1a]/50 rounded text-[11px]">
                   <div className="flex gap-1 items-center text-gray-400">
                     <span>
-                      {item.status === '판매완료' ? '구매자: ' : '신청자: '}
+                      {item.status === '판매완료' ? '구매자: ' : '구매요청자: '}
                       <span className="text-gray-300">{item.buyer || (item.status === '판매중' ? '-' : '요청 없음')}</span>
                     </span>
                     {item.buyer_discord_id && <span className="bg-[#333] px-1 rounded text-[9px]">{item.buyer_discord_id}</span>}
