@@ -98,7 +98,8 @@ export function SellTab({ onRegister, user }: SellTabProps) {
       item_id: selectedItem.id,
       trade_message: data.trade_message,
       trade_channel: data.trade_channel,
-      room_number: data.room_number
+      room_number: data.room_number,
+      item_gender: selectedItem.item_gender
     };
 
     onRegister(newItem);

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -23,6 +24,8 @@ interface HeaderProps {
 
 export function Header({ activeTab, onTabChange, notifications, onClearNotifications, onNavigateToComplete, onAcceptTrade, onDeclineTrade, onMarkAsRead, user }: HeaderProps) {
   const unreadCount = notifications.filter(n => !n.read).length;
+  const router = useRouter();
+
 
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [reviewData, setReviewData] = useState<{
@@ -211,10 +214,14 @@ export function Header({ activeTab, onTabChange, notifications, onClearNotificat
                     ) : (
                       <User className="h-4 w-4" />
                     )}
-                    <span className="text-xs font-bold">{user.user_metadata.full_name || user.email?.split('@')[0]}</span>
+                    <span className="text-xs font-bold">{user.user_metadata.custom_claims.global_name}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-[#222] border-[#3d3d3d] text-white" align="end">
+                  <DropdownMenuItem onClick={() => router.push('/my')} className="focus:bg-[#333] focus:text-white cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>마이페이지</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleLogout} className="focus:bg-[#333] focus:text-white cursor-pointer">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>로그아웃</span>

@@ -222,7 +222,13 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
                           {item.name}
                           {item.item_gender && (
                             <span className="text-gray-400 text-sm font-normal ml-1">
-                              ({item.item_gender === 'Female' ? '여' : item.item_gender === 'Male' ? '남' : item.item_gender === 'Unisex' ? '공용' : item.item_gender})
+                              ({(() => {
+                                const g = item.item_gender?.toLowerCase();
+                                if (g === 'female') return '여';
+                                if (g === 'male') return '남';
+                                if (g === 'unisex') return '공용';
+                                return item.item_gender;
+                              })()})
                             </span>
                           )}
                           {item.count && item.count > 1 && <span className="text-gray-400 text-xs text-no-underline ml-1">({item.count})</span>}

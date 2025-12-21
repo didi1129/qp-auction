@@ -1,5 +1,8 @@
 "use client";
 
+import { PaginationControls } from "@/components/PaginationControls";
+
+
 
 import { Item } from "@/lib/types";
 import { formatRelativeTime } from "@/lib/utils";
@@ -45,6 +48,12 @@ export function MyItemsTab({
   // Purchase Request for Wishlist
   const [purchaseRequestItemId, setPurchaseRequestItemId] = useState<number | null>(null);
   const [purchaseRequestMessage, setPurchaseRequestMessage] = useState("");
+
+  // Pagination State
+  const [requestsPage, setRequestsPage] = useState(1);
+  const [salesPage, setSalesPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
 
   const handleEditClick = (item: Item) => {
     setEditingItem(item);
@@ -93,8 +102,17 @@ export function MyItemsTab({
   ).sort((a, b) => {
     if (a.status === '판매완료' && b.status !== '판매완료') return 1;
     if (a.status !== '판매완료' && b.status === '판매완료') return -1;
+    if (a.status !== '판매완료' && b.status === '판매완료') return -1;
     return b.id - a.id;
   });
+
+  // Pagination Logic
+  const totalRequestsPages = Math.ceil(myRequests.length / ITEMS_PER_PAGE);
+  const currentRequests = myRequests.slice((requestsPage - 1) * ITEMS_PER_PAGE, requestsPage * ITEMS_PER_PAGE);
+
+  const totalSalesPages = Math.ceil(mySales.length / ITEMS_PER_PAGE);
+  const currentSales = mySales.slice((salesPage - 1) * ITEMS_PER_PAGE, salesPage * ITEMS_PER_PAGE);
+
 
   // My Wishlist: Items I've liked
   const myWishlist = items.filter(i => wishlistIds.includes(i.id));
@@ -111,7 +129,7 @@ export function MyItemsTab({
           {myRequests.length === 0 ? (
             <div className="text-center text-gray-500 mt-10">구매 요청한 아이템이 없습니다.</div>
           ) : (
-            myRequests.map(item => (
+            currentRequests.map(item => (
               <div key={item.id} className={`bg-[#2a2a2a] p-3 mb-2 rounded border border-[#333] flex flex-col gap-2 ${item.status === '판매완료' ? 'opacity-50 grayscale' : ''}`}>
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
@@ -166,6 +184,12 @@ export function MyItemsTab({
             ))
           )}
         </div>
+
+        <PaginationControls
+          currentPage={requestsPage}
+          totalPages={totalRequestsPages}
+          onPageChange={setRequestsPage}
+        />
       </div>
 
       {/* My Sales */}
@@ -178,7 +202,7 @@ export function MyItemsTab({
           {mySales.length === 0 ? (
             <div className="text-center text-gray-500 mt-10">판매 등록한 아이템이 없습니다.</div>
           ) : (
-            mySales.map(item => (
+            currentSales.map(item => (
               <div key={item.id} className={`bg-[#2a2a2a] p-3 mb-2 rounded border border-[#333] flex flex-col gap-2 ${item.status === '판매완료' ? 'opacity-50 grayscale' : ''}`}>
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
@@ -215,6 +239,11 @@ export function MyItemsTab({
                 </div>
 
                 <div className="flex flex-col gap-1 px-1 py-1 bg-[#1a1a1a]/50 rounded text-[11px]">
+                  {item.trade_message && (
+                    <div className="text-blue-400 leading-tight italic line-clamp-1">
+                      "{item.trade_message}"
+                    </div>
+                  )}
                   <div className="flex gap-1 items-center text-gray-400">
                     <span>
                       {item.status === '판매완료' ? '구매자: ' : '구매요청자: '}
@@ -222,11 +251,6 @@ export function MyItemsTab({
                     </span>
                     {item.buyer_discord_id && <span className="bg-[#333] px-1 rounded text-[9px]">{item.buyer_discord_id}</span>}
                   </div>
-                  {item.trade_message && (
-                    <div className="text-blue-400 leading-tight italic line-clamp-1">
-                      "{item.trade_message}"
-                    </div>
-                  )}
                   {item.status === '판매완료' && item.sold_at && (
                     <div className="text-right text-[9px] text-gray-500 mt-1">
                       {formatRelativeTime(item.sold_at)} 거래됨
@@ -237,6 +261,12 @@ export function MyItemsTab({
             ))
           )}
         </div>
+
+        <PaginationControls
+          currentPage={salesPage}
+          totalPages={totalSalesPages}
+          onPageChange={setSalesPage}
+        />
       </div>
 
       {/* My Wishlist */}

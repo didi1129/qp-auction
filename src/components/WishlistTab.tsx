@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import { PaginationControls } from "@/components/PaginationControls";
+
 import { Item } from "@/lib/types";
 import { Heart, Trash2, AlertCircle, ShoppingCart, Clock, User, MessageSquare } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -15,7 +18,13 @@ interface WishlistTabProps {
 }
 
 export function WishlistTab({ items, wishlistIds, onToggleWishlist, onPurchaseRequest }: WishlistTabProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
   const wishlistedItems = items.filter(item => wishlistIds.includes(item.id));
+  const totalPages = Math.ceil(wishlistedItems.length / ITEMS_PER_PAGE);
+  const currentWishlist = wishlistedItems.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
 
   return (
     <div className="flex flex-col h-full bg-[#222] text-white p-4 gap-4">
@@ -48,7 +57,7 @@ export function WishlistTab({ items, wishlistIds, onToggleWishlist, onPurchaseRe
                 </TableCell>
               </TableRow>
             ) : (
-              wishlistedItems.map((item) => {
+              currentWishlist.map((item) => {
                 const isSold = item.status === "판매완료";
                 const isExpired = item.timeLeft === "만료됨" || item.timeLeft === "0분";
                 const isDisabled = isSold || isExpired;
@@ -146,6 +155,12 @@ export function WishlistTab({ items, wishlistIds, onToggleWishlist, onPurchaseRe
           </TableBody>
         </Table>
       </div>
+
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 }
