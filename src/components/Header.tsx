@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, History, Heart, ShoppingBag, CheckSquare, HelpCircle, User, LogIn, Bell, Box, LogOut } from "lucide-react";
+import { Search, History, Heart, ShoppingBag, CheckSquare, HelpCircle, User, LogIn, Bell, Box, LogOut, Star } from "lucide-react";
 import { Notification } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
 import { User as SupabaseUser } from "@supabase/supabase-js";
+import { ReviewModal } from "./ReviewModal";
 
 interface HeaderProps {
   activeTab: string;
@@ -21,6 +22,14 @@ interface HeaderProps {
 
 export function Header({ activeTab, onTabChange, notifications, onClearNotifications, onNavigateToComplete, onAcceptTrade, onDeclineTrade, onMarkAsRead, user }: HeaderProps) {
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [reviewData, setReviewData] = useState<{
+    reviewerId: string;
+    revieweeId: string;
+    marketItemId: number;
+    notificationId: string;
+  } | null>(null);
 
   const handleLogin = async () => {
     await supabase.auth.signInWithOAuth({
@@ -119,9 +128,35 @@ export function Header({ activeTab, onTabChange, notifications, onClearNotificat
                         )}
 
                         {notif.type === 'trade_completed' && (
-                          <div className="mt-2 flex justify-end">
-                            <span className="text-xs bg-blue-900 text-blue-200 px-2 py-1 rounded font-bold">거래완료</span>
-                          </div>
+                          <Button
+                            size="sm"
+                            className="w-full mt-2 bg-yellow-600 hover:bg-yellow-700 text-white text-xs h-7 flex items-center justify-center gap-1"
+                            onClick={async () => {
+                              if (!user) return;
+                              // Fetch the item info to get seller ID (reviewee)
+                              // We can store seller_user_id in notification metadata properly, but for now we might need to fetch item
+                              const { data } = await supabase
+                                .from('market_items')
+                                .select('seller_user_id')
+                                .eq('id', notif.itemId)
+                                .single();
+
+                              if (data && data.seller_user_id) {
+                                setReviewData({
+                                  reviewerId: user.id,
+                                  revieweeId: data.seller_user_id,
+                                  marketItemId: notif.itemId!,
+                                  notificationId: notif.id
+                                });
+                                setIsReviewOpen(true);
+                              } else {
+                                alert("판매자 정보를 찾을 수 없습니다.");
+                              }
+                            }}
+                          >
+                            <Star className="h-3 w-3" />
+                            후기 등록
+                          </Button>
                         )}
 
                         {notif.type === 'trade_accept' && notif.itemId && (
@@ -139,6 +174,26 @@ export function Header({ activeTab, onTabChange, notifications, onClearNotificat
                 </div>
               </PopoverContent>
             </Popover> : null}
+
+            {reviewData && (
+              <ReviewModal
+                isOpen={isReviewOpen}
+                onClose={() => {
+                  setIsReviewOpen(false);
+                  setReviewData(null);
+                }}
+                reviewerId={reviewData.reviewerId}
+                revieweeId={reviewData.revieweeId}
+                marketItemId={reviewData.marketItemId}
+                onReviewSubmitted={() => {
+                  // Mark notification as read
+                  onMarkAsRead(reviewData.notificationId);
+
+                  // Also mark as processed logic? 
+                  // For now, just mark read is good.
+                }}
+              />
+            )}
 
             {user ? (
               <DropdownMenu>

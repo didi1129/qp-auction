@@ -491,12 +491,29 @@ export default function Home() {
         sold_at: new Date().toISOString()
       });
 
-    // Update Notification Status to 'trade_complete'
+    // 4. Update Notification Status to 'trade_complete'
     await supabase
       .from('notifications')
       .update({ result_code: 'trade_complete' })
       .eq('item_id', itemId)
       .eq('result_code', 'trade_request');
+
+    // 5. Send Notification to Buyer for Review
+    if (item.buyer_user_id) {
+      const { error: notifError } = await supabase
+        .from('notifications')
+        .insert({
+          item_id: item.id,
+          target_user_discord_id: item.buyer_discord_id,
+          target_user_id: item.buyer_user_id,
+          sender_user_discord_id: item.seller_discord_id, // Seller triggers this
+          message: `거래 알림: '${item.name}' 거래가 완료되었습니다. 판매자에게 후기를 남겨주세요!`,
+          result_code: 'trade_completed',
+          is_read: false
+        });
+
+      if (notifError) console.error("Error sending review notification to buyer:", notifError);
+    }
 
     setItems((prev) =>
       prev.map((item) =>
