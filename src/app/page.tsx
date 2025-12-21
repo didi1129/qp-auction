@@ -737,7 +737,7 @@ export default function Home() {
           onCancelPurchaseRequest={handleCancelPurchaseRequest}
           wishlistIds={wishlistIds}
           onToggleWishlist={handleToggleWishlist}
-          onPurchaseRequest={(id, message) => handlePurchaseRequest(id, message)}
+          onPurchaseRequest={(id: number, message?: string) => handlePurchaseRequest(id, message)}
         />
       ) : activeTab === "market" ? (
         <MarketPriceTab items={priceHistory} />

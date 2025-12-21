@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface MyItemsTabProps {
   items: Item[];
@@ -40,6 +41,7 @@ export function MyItemsTab({
   onToggleWishlist,
   onPurchaseRequest
 }: MyItemsTabProps) {
+  const router = useRouter();
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
   const [newPrice, setNewPrice] = useState("");
@@ -54,6 +56,12 @@ export function MyItemsTab({
   const [salesPage, setSalesPage] = useState(1);
   const [wishlistPage, setWishlistPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
+
+  const handleUserClick = (userId: string) => {
+    if (userId) {
+      router.push(`/users/${userId}`);
+    }
+  };
 
   const handleEditClick = (item: Item) => {
     setEditingItem(item);
@@ -175,7 +183,10 @@ export function MyItemsTab({
 
                 <div className="flex flex-col gap-1 px-1 py-1 bg-[#1a1a1a]/50 rounded text-[11px]">
                   <div className="flex gap-1 items-center text-gray-400">
-                    <span>판매자: <span className="text-gray-300">{item.seller}</span></span>
+                    <span>판매자: <span
+                      className={`text-gray-300 ${item.seller_user_id ? "cursor-pointer hover:underline hover:text-white" : ""}`}
+                      onClick={() => item.seller_user_id && handleUserClick(item.seller_user_id)}
+                    >{item.seller}</span></span>
                     {item.seller_discord_id && <span className="bg-[#333] px-1 rounded text-[9px]">{item.seller_discord_id}</span>}
                   </div>
                   {item.trade_message && (
@@ -257,7 +268,10 @@ export function MyItemsTab({
                   <div className="flex gap-1 items-center text-gray-400">
                     <span>
                       {item.status === '판매완료' ? '구매자: ' : '구매요청자: '}
-                      <span className="text-gray-300">{item.buyer || (item.status === '판매중' ? '-' : '요청 없음')}</span>
+                      <span
+                        className={`text-gray-300 ${item.buyer_user_id ? "cursor-pointer hover:underline hover:text-white" : ""}`}
+                        onClick={() => item.buyer_user_id && handleUserClick(item.buyer_user_id)}
+                      >{item.buyer || (item.status === '판매중' ? '-' : '요청 없음')}</span>
                     </span>
                     {item.buyer_discord_id && <span className="bg-[#333] px-1 rounded text-[9px]">{item.buyer_discord_id}</span>}
                   </div>
@@ -339,7 +353,10 @@ export function MyItemsTab({
 
                 <div className="flex flex-col gap-1 px-1 py-1 bg-[#1a1a1a]/50 rounded text-[11px]">
                   <div className="flex gap-1 items-center text-gray-400">
-                    <span>판매자: <span className="text-gray-300">{item.seller}</span></span>
+                    <span>판매자: <span
+                      className={`text-gray-300 ${item.seller_user_id ? "cursor-pointer hover:underline hover:text-white" : ""}`}
+                      onClick={() => item.seller_user_id && handleUserClick(item.seller_user_id)}
+                    >{item.seller}</span></span>
                     {item.seller_discord_id && <span className="bg-[#333] px-1 rounded text-[9px]">{item.seller_discord_id}</span>}
                   </div>
                   {item.trade_message && (
