@@ -219,7 +219,12 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
                           }}
                         >
                           {item.name}
-                          {item.count && item.count > 1 && <span className="text-gray-400 text-xs text-no-underline">({item.count})</span>}
+                          {item.item_gender && (
+                            <span className="text-gray-400 text-sm font-normal ml-1">
+                              ({item.item_gender === 'Female' ? '여' : item.item_gender === 'Male' ? '남' : item.item_gender === 'Unisex' ? '공용' : item.item_gender})
+                            </span>
+                          )}
+                          {item.count && item.count > 1 && <span className="text-gray-400 text-xs text-no-underline ml-1">({item.count})</span>}
                           {/* Wishlist Toggle Button - Hide for own items and sold items */}
                           {item.seller_user_id !== currentUserId && item.status !== "판매완료" && (
                             <Button

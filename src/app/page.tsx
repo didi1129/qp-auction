@@ -145,6 +145,7 @@ export default function Home() {
           if (!itemInfo) return null;
 
           // Calculate time left (24 hours from created_at)
+          console.log("Mapping item:", item.id, "Info:", itemInfo);
           const createdAt = new Date(item.created_at);
           const expireTime = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000);
           const now = new Date();
@@ -185,7 +186,7 @@ export default function Home() {
             item_id: item.item_id,
             trade_message: item.trade_message,
             cancel_count: item.cancel_count || 0,
-            item_gender: itemInfo.gender
+            item_gender: itemInfo.item_gender || itemInfo.gender
           };
           return mapped;
         });

@@ -63,6 +63,7 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
           trade_message: data.trade_message,
           buyer_user_id: data.buyer_user_id,
           cancel_count: data.cancel_count ?? 0,
+          item_gender: itemInfo?.item_gender || itemInfo?.gender,
         };
         setItem(mappedItem);
       }
@@ -242,7 +243,14 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
                   {item.status === '거래중' && <Badge className="bg-blue-600 hover:bg-blue-700">거래중</Badge>}
                   {item.status === '거래대기중' && <Badge className="bg-yellow-600">거래대기중</Badge>}
                 </div>
-                <h1 className="text-3xl font-bold">{item.name}</h1>
+                <h1 className="text-3xl font-bold flex items-center gap-2">
+                  {item.name}
+                  {item.item_gender && (
+                    <span className="text-gray-400 text-xl font-normal">
+                      ({item.item_gender === 'Female' ? '여' : item.item_gender === 'Male' ? '남' : item.item_gender === 'Unisex' ? '공용' : item.item_gender})
+                    </span>
+                  )}
+                </h1>
               </div>
 
               <div className="text-3xl font-bold text-yellow-500 flex items-end gap-2 bg-[#222] p-4 rounded-lg border border-[#333]">

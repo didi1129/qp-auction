@@ -39,6 +39,7 @@ export function SellTab({ onRegister, user }: SellTabProps) {
     if (error) {
       console.error(error);
     } else {
+      console.log("SellTab search results:", data);
       setSearchResults(data || []);
     }
   };
@@ -140,13 +141,18 @@ export function SellTab({ onRegister, user }: SellTabProps) {
               <div className="w-8 h-8 bg-[#2a2a2a] rounded flex items-center justify-center border border-[#444] overflow-hidden">
                 {item.image ? (
                   <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
-                ) : (
-                  <Package className="h-4 w-4 text-gray-500" />
-                )}
+                ) : <div className="text-[10px] text-gray-500">IMG</div>}
               </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-bold">{item.name}</span>
-                <span className="text-xs text-gray-400">{item.category}</span>
+              <div>
+                <div className="text-white font-bold flex items-center gap-1">
+                  {item.name}
+                  {item.item_gender && (
+                    <span className="text-gray-400 text-xs font-normal">
+                      ({item.item_gender === 'Female' ? '여' : item.item_gender === 'Male' ? '남' : item.item_gender === 'Unisex' ? '공용' : item.item_gender})
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs text-gray-400">{item.category}</div>
               </div>
             </div>
           ))}
