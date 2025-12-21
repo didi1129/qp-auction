@@ -202,7 +202,9 @@ export default function Home() {
             trade_message: item.trade_message,
             cancel_count: item.cancel_count || 0,
             item_gender: itemInfo.item_gender || itemInfo.gender,
-            sold_at: item.sold_at
+            sold_at: item.sold_at,
+            trade_channel: item.trade_channel,
+            room_number: item.room_number
           };
           return mapped;
         });

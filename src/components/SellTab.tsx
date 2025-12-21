@@ -107,11 +107,6 @@ export function SellTab({ onRegister, user }: SellTabProps) {
     alert('판매 등록에 성공했습니다!');
     setSelectedItem(null);
     setPrice("");
-    setTradeMessage("");
-    setTradeChannel("");
-    setRoomNumber("");
-    setSearchTerm("");
-    setSearchResults([]);
   };
 
   return (
@@ -207,12 +202,6 @@ export function SellTab({ onRegister, user }: SellTabProps) {
               />
               <span className="absolute right-3 top-2.5 text-gray-400 text-sm">원</span>
             </div>
-
-            {/* <label className="text-gray-400 font-bold">등록 시간</label>
-            <div className="flex items-center gap-2 text-white font-bold bg-[#333] px-3 py-2 rounded">
-              <Clock className="h-4 w-4 text-gray-400" />
-              24시간 00분
-            </div> */}
 
             <label className="text-gray-400 font-bold">거래 채널</label>
             <Input

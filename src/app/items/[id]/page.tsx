@@ -64,6 +64,8 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
           buyer_user_id: data.buyer_user_id,
           cancel_count: data.cancel_count ?? 0,
           item_gender: itemInfo?.item_gender || itemInfo?.gender,
+          trade_channel: data.trade_channel,
+          room_number: data.room_number,
         };
         setItem(mappedItem);
       }
@@ -272,6 +274,20 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
                 <span className="font-bold text-lg text-yellow-500">{item.timeLeft || "24:00"}</span>
               </div>
             </div>
+
+            {/* Trade Details (Channel & Room) */}
+            {(item.trade_channel || item.room_number) && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-[#222] p-4 rounded-lg border border-[#333] flex flex-col gap-1">
+                  <span className="text-xs text-gray-400">거래 채널</span>
+                  <span className="font-bold text-lg">{item.trade_channel || "-"}</span>
+                </div>
+                <div className="bg-[#222] p-4 rounded-lg border border-[#333] flex flex-col gap-1">
+                  <span className="text-xs text-gray-400">방 번호</span>
+                  <span className="font-bold text-lg">{item.room_number || "-"}</span>
+                </div>
+              </div>
+            )}
 
             {item.trade_message && (
               <div className="bg-[#2a3f4a]/30 p-4 rounded-lg border border-[#2a3f4a] space-y-2">
