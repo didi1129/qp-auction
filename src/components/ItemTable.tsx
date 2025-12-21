@@ -291,7 +291,15 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
                       </TableCell>
 
                       {/* Seller */}
-                      <TableCell className="text-center text-gray-300 text-sm">
+                      <TableCell
+                        className="text-center text-gray-300 text-sm cursor-pointer hover:text-yellow-500 hover:underline transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (item.seller_user_id) {
+                            router.push(`/users/${item.seller_user_id}`);
+                          }
+                        }}
+                      >
                         {item.seller || item.seller_discord_id ? formatUserWithId(item.seller, item.seller_discord_id) : "-"}
                       </TableCell>
 
