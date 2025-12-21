@@ -31,13 +31,14 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
 
   const router = useRouter();
 
-  // Reset pagination when items change (e.g., search filter applied)
-  useEffect(() => {
-    setCurrentPage(1);
-    setSelectedId(null);
-  }, [items]);
-
+  // Adjust pagination when items change
   const totalPages = Math.ceil(items.length / itemsPerPage);
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [items, totalPages, currentPage]);
   const formatUserWithId = (name: string | null | undefined, id?: string | null) => {
     if (!name) return "-";
     if (!id) return name;
