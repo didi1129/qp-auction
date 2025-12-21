@@ -21,13 +21,15 @@ interface Review {
 interface UserProfile {
   name: string;
   discord_id: string;
+  avatar_url?: string | null;
 }
 
 interface UserProfileViewerProps {
   userId: string;
+  avatarUrl?: string;
 }
 
-export function UserProfileViewer({ userId }: UserProfileViewerProps) {
+export function UserProfileViewer({ userId, avatarUrl }: UserProfileViewerProps) {
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -45,7 +47,7 @@ export function UserProfileViewer({ userId }: UserProfileViewerProps) {
         console.log("Fetching profile for userId:", userId);
         const { data: userData } = await supabase
           .from('market_items')
-          .select('seller, seller_discord_id')
+          .select('seller, seller_discord_id, seller_avatar_url')
           .eq('user_id', userId)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -54,7 +56,8 @@ export function UserProfileViewer({ userId }: UserProfileViewerProps) {
         if (userData) {
           setProfile({
             name: userData.seller || "알 수 없음",
-            discord_id: userData.seller_discord_id || "정보 없음"
+            discord_id: userData.seller_discord_id || "정보 없음",
+            avatar_url: userData.seller_avatar_url
           });
         } else {
           // Fallback: Check if user exists as a buyer
@@ -162,8 +165,12 @@ export function UserProfileViewer({ userId }: UserProfileViewerProps) {
       <div className="flex-1 overflow-y-auto p-4 sm:p-8 max-w-4xl mx-auto w-full">
         {/* Profile Card */}
         <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-6 mb-8 flex flex-col sm:flex-row items-center sm:items-start gap-6">
-          <div className="w-20 h-20 bg-[#333] rounded-full flex items-center justify-center border-2 border-[#444]">
-            <User className="h-10 w-10 text-gray-500" />
+          <div className="w-20 h-20 bg-[#333] rounded-full flex items-center justify-center border-2 border-[#444] overflow-hidden">
+            {avatarUrl || profile?.avatar_url ? (
+              <img src={avatarUrl || profile?.avatar_url || ""} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              <User className="h-10 w-10 text-gray-500" />
+            )}
           </div>
           <div className="flex-1 text-center sm:text-left">
             <h2 className="text-2xl font-bold text-yellow-500 mb-2">{profile?.name || "알 수 없는 사용자"}</h2>
@@ -171,11 +178,12 @@ export function UserProfileViewer({ userId }: UserProfileViewerProps) {
 
             <div className="flex items-center justify-center sm:justify-start gap-6">
               <div className="flex flex-col items-center sm:items-start">
-                <span className="text-gray-500 text-xs uppercase tracking-wider">이용자 평점</span>
+                <span className="text-gray-500 text-xs uppercase tracking-wider">거래 평점</span>
                 <div className="flex items-center gap-2">
                   <span className={`text-2xl font-bold ${recommendationRate >= 80 ? 'text-green-500' : recommendationRate >= 50 ? 'text-yellow-500' : 'text-red-500'}`}>
-                    {recommendationRate}%
+                    {recommendationRate}점
                   </span>
+                  /100점
                   <span className="text-sm text-gray-500">({totalReviews}개의 후기)</span>
                 </div>
               </div>

@@ -25,6 +25,7 @@ export interface Item {
   sold_at?: string;
   trade_channel?: string;
   room_number?: string;
+  seller_avatar_url?: string | null;
 }
 
 export interface Notification {

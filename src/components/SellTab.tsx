@@ -70,7 +70,8 @@ export function SellTab({ onRegister, user }: SellTabProps) {
         "isNew": true,
         trade_message: tradeMessage,
         trade_channel: tradeChannel || null,
-        room_number: roomNumber || null
+        room_number: roomNumber || null,
+        seller_avatar_url: user.user_metadata?.avatar_url || null
       })
       .select()
       .single();

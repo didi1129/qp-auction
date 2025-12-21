@@ -32,5 +32,6 @@ export default function MyPage() {
     return null; // Redirecting
   }
 
-  return <UserProfileViewer userId={user.id} />;
+  return <UserProfileViewer userId={user.id} avatarUrl={user.user_metadata.avatar_url} />;
+
 }
