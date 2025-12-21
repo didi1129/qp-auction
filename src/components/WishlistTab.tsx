@@ -27,17 +27,25 @@ export function WishlistTab({ items, wishlistIds, onToggleWishlist, onPurchaseRe
 
 
   return (
-    <div className="flex flex-col h-full bg-[#222] text-white p-4 gap-4">
+    <div className="flex flex-col flex-1 bg-[#222] text-white p-4 gap-4 overflow-hidden min-h-0">
       <div className="flex items-center justify-between border-b border-[#3d3d3d] pb-4">
-        <h2 className="text-xl font-bold text-red-500 flex items-center gap-2">
-          <Heart className="h-6 w-6 fill-current" /> 찜 목록
-        </h2>
-        <div className="text-sm text-gray-400">
-          관심 있는 매물을 모아볼 수 있습니다. (최대 24시간 유지)
+        <div>
+          <h2 className="text-xl font-bold text-red-500 flex items-center gap-2">
+            <Heart className="h-6 w-6 fill-current" /> 찜 목록
+            <span className="text-sm text-gray-500 font-normal">({wishlistedItems.length})</span>
+          </h2>
+          <div className="text-sm text-gray-400 mt-1">
+            관심 있는 매물을 모아볼 수 있습니다. (최대 24시간 유지)
+          </div>
         </div>
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
-      <div className="flex-1 overflow-auto bg-[#1a1a1a] rounded border border-[#3d3d3d]">
+      <div className="flex-1 overflow-auto bg-[#1a1a1a] rounded border border-[#3d3d3d] min-h-0">
         <Table>
           <TableHeader className="bg-[#2a2a2a] sticky top-0">
             <TableRow className="border-[#3d3d3d]">
@@ -155,12 +163,6 @@ export function WishlistTab({ items, wishlistIds, onToggleWishlist, onPurchaseRe
           </TableBody>
         </Table>
       </div>
-
-      <PaginationControls
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-      />
     </div>
   );
 }

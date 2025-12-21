@@ -52,8 +52,8 @@ export function MyItemsTab({
   // Pagination State
   const [requestsPage, setRequestsPage] = useState(1);
   const [salesPage, setSalesPage] = useState(1);
+  const [wishlistPage, setWishlistPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
-
 
   const handleEditClick = (item: Item) => {
     setEditingItem(item);
@@ -106,6 +106,9 @@ export function MyItemsTab({
     return b.id - a.id;
   });
 
+  // My Wishlist: Items I've liked
+  const myWishlist = items.filter(i => wishlistIds.includes(i.id));
+
   // Pagination Logic
   const totalRequestsPages = Math.ceil(myRequests.length / ITEMS_PER_PAGE);
   const currentRequests = myRequests.slice((requestsPage - 1) * ITEMS_PER_PAGE, requestsPage * ITEMS_PER_PAGE);
@@ -113,19 +116,25 @@ export function MyItemsTab({
   const totalSalesPages = Math.ceil(mySales.length / ITEMS_PER_PAGE);
   const currentSales = mySales.slice((salesPage - 1) * ITEMS_PER_PAGE, salesPage * ITEMS_PER_PAGE);
 
-
-  // My Wishlist: Items I've liked
-  const myWishlist = items.filter(i => wishlistIds.includes(i.id));
+  const totalWishlistPages = Math.ceil(myWishlist.length / ITEMS_PER_PAGE);
+  const currentWishlist = myWishlist.slice((wishlistPage - 1) * ITEMS_PER_PAGE, wishlistPage * ITEMS_PER_PAGE);
 
   return (
-    <div className="flex flex-1 gap-4 p-4 bg-[#222] text-white overflow-hidden h-full">
+    <div className="flex flex-1 gap-4 p-4 bg-[#222] text-white overflow-hidden min-h-0">
       {/* My Purchase Requests */}
-      <div className="flex-1 flex flex-col gap-4 border-r border-[#3d3d3d] pr-4">
-        <h2 className="text-lg font-bold text-yellow-500 flex items-center gap-2">
-          <Package className="h-5 w-5" /> 내 구매 요청 목록
-          <span className="text-sm text-gray-400 font-normal">({myRequests.length})</span>
-        </h2>
-        <div className="flex-1 overflow-y-auto bg-[#1a1a1a] border border-[#3d3d3d] rounded p-2 text-sm">
+      <div className="flex-1 flex flex-col gap-4 border-r border-[#3d3d3d] pr-4 min-h-0">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-yellow-500 flex items-center gap-2">
+            <Package className="h-5 w-5" /> 내 구매 요청 목록
+            <span className="text-sm text-gray-400 font-normal">({myRequests.length})</span>
+          </h2>
+          <PaginationControls
+            currentPage={requestsPage}
+            totalPages={totalRequestsPages}
+            onPageChange={setRequestsPage}
+          />
+        </div>
+        <div className="flex-1 overflow-y-auto bg-[#1a1a1a] border border-[#3d3d3d] rounded p-2 text-sm min-h-0">
           {myRequests.length === 0 ? (
             <div className="text-center text-gray-500 mt-10">구매 요청한 아이템이 없습니다.</div>
           ) : (
@@ -184,20 +193,21 @@ export function MyItemsTab({
             ))
           )}
         </div>
-
-        <PaginationControls
-          currentPage={requestsPage}
-          totalPages={totalRequestsPages}
-          onPageChange={setRequestsPage}
-        />
       </div>
 
       {/* My Sales */}
-      <div className="flex-1 flex flex-col gap-4 border-r border-[#3d3d3d] pr-4">
-        <h2 className="text-lg font-bold text-green-500 flex items-center gap-2">
-          <CheckCircle className="h-5 w-5" /> 내 판매 목록
-          <span className="text-sm text-gray-400 font-normal">({mySales.length})</span>
-        </h2>
+      <div className="flex-1 flex flex-col gap-4 border-r border-[#3d3d3d] pr-4 min-h-0">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-green-500 flex items-center gap-2">
+            <CheckCircle className="h-5 w-5" /> 내 판매 목록
+            <span className="text-sm text-gray-400 font-normal">({mySales.length})</span>
+          </h2>
+          <PaginationControls
+            currentPage={salesPage}
+            totalPages={totalSalesPages}
+            onPageChange={setSalesPage}
+          />
+        </div>
         <div className="flex-1 overflow-y-auto bg-[#1a1a1a] border border-[#3d3d3d] rounded p-2 text-sm">
           {mySales.length === 0 ? (
             <div className="text-center text-gray-500 mt-10">판매 등록한 아이템이 없습니다.</div>
@@ -261,25 +271,26 @@ export function MyItemsTab({
             ))
           )}
         </div>
-
-        <PaginationControls
-          currentPage={salesPage}
-          totalPages={totalSalesPages}
-          onPageChange={setSalesPage}
-        />
       </div>
 
       {/* My Wishlist */}
       <div className="flex-1 flex flex-col gap-4">
-        <h2 className="text-lg font-bold text-red-500 flex items-center gap-2">
-          <Heart className="h-5 w-5 fill-current" /> 찜 목록
-          <span className="text-sm text-gray-400 font-normal">({myWishlist.length})</span>
-        </h2>
-        <div className="flex-1 overflow-y-auto bg-[#1a1a1a] border border-[#3d3d3d] rounded p-2 text-sm">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-red-500 flex items-center gap-2">
+            <Heart className="h-5 w-5 fill-current" /> 찜 목록
+            <span className="text-sm text-gray-400 font-normal">({myWishlist.length})</span>
+          </h2>
+          <PaginationControls
+            currentPage={wishlistPage}
+            totalPages={totalWishlistPages}
+            onPageChange={setWishlistPage}
+          />
+        </div>
+        <div className="flex-1 overflow-y-auto bg-[#1a1a1a] border border-[#3d3d3d] rounded p-2 text-sm min-h-0">
           {myWishlist.length === 0 ? (
             <div className="text-center text-gray-500 mt-10">찜한 아이템이 없습니다.</div>
           ) : (
-            myWishlist.map(item => (
+            currentWishlist.map(item => (
               <div key={item.id} className={`bg-[#2a2a2a] p-3 mb-2 rounded border border-[#333] flex flex-col gap-2 ${item.status === '판매완료' ? 'opacity-50 grayscale' : ''}`}>
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
