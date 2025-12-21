@@ -268,7 +268,7 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
             {item.trade_message && (
               <div className="bg-[#2a3f4a]/30 p-4 rounded-lg border border-[#2a3f4a] space-y-2">
                 <h3 className="text-sm font-bold text-yellow-500 flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4" /> 판매자 거래 메시지
+                  <MessageSquare className="h-4 w-4" /> 판매 메시지
                 </h3>
                 <p className="text-sm text-gray-300 leading-relaxed break-words">
                   {item.trade_message}

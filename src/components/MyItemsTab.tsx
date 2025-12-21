@@ -303,7 +303,7 @@ export function MyItemsTab({
               <Input type="number" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} className="bg-[#333] border-[#444] text-white" />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-400">거래 메시지</label>
+              <label className="text-sm font-medium text-gray-400">판매 메시지</label>
               <textarea
                 className="w-full bg-[#333] border border-[#444] text-white p-3 rounded h-24 resize-none focus:outline-none text-sm"
                 value={newTradeMessage}

@@ -79,7 +79,7 @@ export function WishlistTab({ items, wishlistIds, onToggleWishlist, onPurchaseRe
                                 </PopoverTrigger>
                                 <PopoverContent className="bg-[#2a2a2a] border-[#444] text-white p-3 text-sm max-w-[250px] break-words shadow-xl z-[100]">
                                   <div className="font-bold text-yellow-500 mb-1 flex items-center gap-1 text-xs">
-                                    <MessageSquare className="h-3 w-3" /> 거래 메시지
+                                    <MessageSquare className="h-3 w-3" /> 판매 메시지
                                   </div>
                                   <div className="text-xs">{item.trade_message}</div>
                                 </PopoverContent>

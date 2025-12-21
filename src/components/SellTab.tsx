@@ -224,7 +224,7 @@ export function SellTab({ onRegister, user }: SellTabProps) {
               disabled={!selectedItem}
             />
 
-            <label className="text-gray-400 font-bold">거래 메시지</label>
+            <label className="text-gray-400 font-bold">판매 메시지</label>
             <textarea
               className="bg-[#333] text-white border border-[#444] p-3 rounded h-24 resize-none focus:outline-none focus:border-[oklch(0.6_0.15_240)] placeholder-gray-500 text-sm"
               placeholder="예: 연락주세요, 흥정 가능합니다 (100자 이내)"
