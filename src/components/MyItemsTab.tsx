@@ -1,6 +1,8 @@
 "use client";
 
+
 import { Item } from "@/lib/types";
+import { formatRelativeTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Package, CheckCircle, Pencil, Trash2, Heart } from "lucide-react";
 import { useState } from "react";
@@ -78,13 +80,21 @@ export function MyItemsTab({
 
     return i.status === "거래대기중" || i.status === "거래중" ||
       (i.status === "판매완료" && (i.buyer_user_id === currentUserId || i.buyer_discord_id === currentUserDiscordId));
+  }).sort((a, b) => {
+    if (a.status === '판매완료' && b.status !== '판매완료') return 1;
+    if (a.status !== '판매완료' && b.status === '판매완료') return -1;
+    return b.id - a.id; // Sort by newest first within same status group
   });
 
   // My Sales: Items where I am the seller
   const mySales = items.filter(i =>
     (currentUserId && i.seller_user_id === currentUserId) ||
     (currentUserDiscordId && i.seller_discord_id === currentUserDiscordId)
-  );
+  ).sort((a, b) => {
+    if (a.status === '판매완료' && b.status !== '판매완료') return 1;
+    if (a.status !== '판매완료' && b.status === '판매완료') return -1;
+    return b.id - a.id;
+  });
 
   // My Wishlist: Items I've liked
   const myWishlist = items.filter(i => wishlistIds.includes(i.id));
@@ -144,6 +154,11 @@ export function MyItemsTab({
                   {item.trade_message && (
                     <div className="text-blue-400 leading-tight italic line-clamp-1">
                       "{item.trade_message}"
+                    </div>
+                  )}
+                  {item.status === '판매완료' && item.sold_at && (
+                    <div className="text-right text-[9px] text-gray-500 mt-1">
+                      {formatRelativeTime(item.sold_at)} 거래됨
                     </div>
                   )}
                 </div>
@@ -210,6 +225,11 @@ export function MyItemsTab({
                   {item.trade_message && (
                     <div className="text-blue-400 leading-tight italic line-clamp-1">
                       "{item.trade_message}"
+                    </div>
+                  )}
+                  {item.status === '판매완료' && item.sold_at && (
+                    <div className="text-right text-[9px] text-gray-500 mt-1">
+                      {formatRelativeTime(item.sold_at)} 거래됨
                     </div>
                   )}
                 </div>

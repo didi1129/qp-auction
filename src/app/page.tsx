@@ -93,6 +93,21 @@ export default function Home() {
                   n.result_code === 'trade_completed' ? 'trade_review_needed' : undefined
         }));
         setNotifications(mappedNotifs);
+
+        // Auto-update item status to '판매완료' if we receive a completion notification
+        const completedItemIds = data
+          .filter((n: any) => n.result_code === 'trade_completed')
+          .map((n: any) => n.item_id);
+
+        if (completedItemIds.length > 0) {
+          setItems(prevItems => prevItems.map(item => {
+            if (completedItemIds.includes(item.id) && item.status !== '판매완료') {
+              console.log("Auto-completing item based on notification:", item.id);
+              return { ...item, status: '판매완료', sold_at: item.sold_at || new Date().toISOString() };
+            }
+            return item;
+          }));
+        }
       }
     };
 
@@ -186,7 +201,8 @@ export default function Home() {
             item_id: item.item_id,
             trade_message: item.trade_message,
             cancel_count: item.cancel_count || 0,
-            item_gender: itemInfo.item_gender || itemInfo.gender
+            item_gender: itemInfo.item_gender || itemInfo.gender,
+            sold_at: item.sold_at
           };
           return mapped;
         });
@@ -473,7 +489,8 @@ export default function Home() {
     await supabase
       .from('market_items')
       .update({
-        status: '판매완료'
+        status: '판매완료',
+        sold_at: new Date().toISOString()
         // Buyer info is already set during purchase request
       })
       .eq('id', itemId);
@@ -520,7 +537,7 @@ export default function Home() {
     setItems((prev) =>
       prev.map((item) =>
         item.id === itemId
-          ? { ...item, status: "판매완료" as const }
+          ? { ...item, status: "판매완료" as const, sold_at: new Date().toISOString() }
           : item
       )
     );
