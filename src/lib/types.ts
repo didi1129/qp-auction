@@ -23,6 +23,8 @@ export interface Item {
   cancel_count?: number;
   item_gender?: string | null;
   sold_at?: string;
+  trade_channel?: string;
+  room_number?: string;
 }
 
 export interface Notification {

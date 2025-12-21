@@ -123,6 +123,8 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
               <TableHead className="text-gray-300 font-bold h-8 w-[250px] text-left">아이템 이름</TableHead>
               <TableHead className="text-center text-gray-300 font-bold h-8 w-[150px]">가격</TableHead>
               {/* <TableHead className="text-center text-gray-300 font-bold h-8 w-[150px]">개당 가격</TableHead> */}
+              <TableHead className="text-center text-gray-300 font-bold h-8 w-[100px]">거래채널</TableHead>
+              <TableHead className="text-center text-gray-300 font-bold h-8 w-[100px]">방번호</TableHead>
               <TableHead className="text-center text-gray-300 font-bold h-8 w-[120px]">남은시간</TableHead>
               <TableHead className="text-center text-gray-300 font-bold h-8 w-[100px]">판매자</TableHead>
               <TableHead className="text-center text-gray-300 font-bold h-8 w-[100px]">구매자</TableHead>
@@ -142,6 +144,10 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
                   <TableCell><div className="flex flex-col items-center gap-1"><Skeleton className="h-4 w-20" /><Skeleton className="h-3 w-12" /></div></TableCell>
                   {/* 개당 가격 */}
                   {/* <TableCell><Skeleton className="h-4 w-16 ml-auto" /></TableCell> */}
+                  {/* 거래채널 */}
+                  <TableCell><Skeleton className="h-4 w-12 mx-auto" /></TableCell>
+                  {/* 방번호 */}
+                  <TableCell><Skeleton className="h-4 w-12 mx-auto" /></TableCell>
                   {/* 남은시간 */}
                   <TableCell><Skeleton className="h-4 w-16 mx-auto" /></TableCell>
                   {/* 판매자 */}
@@ -155,7 +161,7 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
             ) : items.length === 0 ? (
               // No Results State
               <TableRow className="h-[400px] border-[#333] hover:bg-transparent">
-                <TableCell colSpan={8} className="text-center text-gray-500">
+                <TableCell colSpan={10} className="text-center text-gray-500">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <AlertCircle className="h-10 w-10 text-gray-600 mb-2" />
                     <span className="text-lg font-bold">검색 결과가 없습니다.</span>
@@ -269,6 +275,16 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
                         )}
                       </TableCell> */}
 
+                      {/* Trade Channel */}
+                      <TableCell className="text-center text-gray-300 text-sm">
+                        {item.trade_channel || "-"}
+                      </TableCell>
+
+                      {/* Room Number */}
+                      <TableCell className="text-center text-gray-300 text-sm">
+                        {item.room_number || "-"}
+                      </TableCell>
+
                       {/* Time Left */}
                       <TableCell className="text-center text-white text-sm">
                         {item.timeLeft}
@@ -302,7 +318,7 @@ export function ItemTable({ items, onPurchaseRequest, isLoading = false, current
                 {/* Fill empty rows to maintain height look */}
                 {Array.from({ length: Math.max(0, 10 - currentItems.length) }).map((_, i) => (
                   <TableRow key={`empty-${i}`} className="border-[#333] h-[50px] hover:bg-transparent pointer-events-none">
-                    <TableCell colSpan={8} className="p-0"></TableCell>
+                    <TableCell colSpan={10} className="p-0"></TableCell>
                   </TableRow>
                 ))}
               </>

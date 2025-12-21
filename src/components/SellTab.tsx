@@ -20,6 +20,8 @@ export function SellTab({ onRegister, user }: SellTabProps) {
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [price, setPrice] = useState("");
   const [tradeMessage, setTradeMessage] = useState("");
+  const [tradeChannel, setTradeChannel] = useState("");
+  const [roomNumber, setRoomNumber] = useState("");
 
   const handleSearch = async (term: string) => {
     setSearchTerm(term);
@@ -65,7 +67,9 @@ export function SellTab({ onRegister, user }: SellTabProps) {
         status: "판매중",
         "timeLeft": "24시간 00분",
         "isNew": true,
-        trade_message: tradeMessage
+        trade_message: tradeMessage,
+        trade_channel: tradeChannel || null,
+        room_number: roomNumber || null
       })
       .select()
       .single();
@@ -91,14 +95,18 @@ export function SellTab({ onRegister, user }: SellTabProps) {
       seller_user_id: user.id,
       image: selectedItem.image,
       item_id: selectedItem.id,
-      trade_message: data.trade_message
+      trade_message: data.trade_message,
+      trade_channel: data.trade_channel,
+      room_number: data.room_number
     };
 
     onRegister(newItem);
-    alert(`${selectedItem.name}이(가) ${Number(price).toLocaleString()} 원에 등록되었습니다.`);
+    alert('판매 등록에 성공했습니다!');
     setSelectedItem(null);
     setPrice("");
     setTradeMessage("");
+    setTradeChannel("");
+    setRoomNumber("");
     setSearchTerm("");
     setSearchResults([]);
   };
@@ -192,11 +200,29 @@ export function SellTab({ onRegister, user }: SellTabProps) {
               <span className="absolute right-3 top-2.5 text-gray-400 text-sm">원</span>
             </div>
 
-            <label className="text-gray-400 font-bold">등록 시간</label>
+            {/* <label className="text-gray-400 font-bold">등록 시간</label>
             <div className="flex items-center gap-2 text-white font-bold bg-[#333] px-3 py-2 rounded">
               <Clock className="h-4 w-4 text-gray-400" />
               24시간 00분
-            </div>
+            </div> */}
+
+            <label className="text-gray-400 font-bold">거래 채널</label>
+            <Input
+              className="bg-[#333] text-white border-[#444] focus:ring-offset-0 focus:ring-1 focus:ring-[oklch(0.6_0.15_240)] placeholder-gray-500"
+              placeholder="예: 1234 (선택사항)"
+              value={tradeChannel}
+              onChange={(e) => setTradeChannel(e.target.value)}
+              disabled={!selectedItem}
+            />
+
+            <label className="text-gray-400 font-bold">방 번호</label>
+            <Input
+              className="bg-[#333] text-white border-[#444] focus:ring-offset-0 focus:ring-1 focus:ring-[oklch(0.6_0.15_240)] placeholder-gray-500"
+              placeholder="예: 123 (선택사항)"
+              value={roomNumber}
+              onChange={(e) => setRoomNumber(e.target.value)}
+              disabled={!selectedItem}
+            />
 
             <label className="text-gray-400 font-bold">거래 메시지</label>
             <textarea
