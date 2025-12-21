@@ -89,7 +89,8 @@ export default function Home() {
           type: n.result_code === 'trade_request' ? 'trade_request' :
             n.result_code === 'trade_accept' ? 'trade_accept' :
               n.result_code === 'trade_declined' ? 'trade_declined' :
-                n.result_code === 'trade_complete' ? 'trade_completed' : undefined
+                n.result_code === 'trade_complete' ? 'trade_complete_seller' :
+                  n.result_code === 'trade_completed' ? 'trade_review_needed' : undefined
         }));
         setNotifications(mappedNotifs);
       }
@@ -645,7 +646,8 @@ export default function Home() {
     setActiveTab("search");
   };
   const filteredItems = items.filter((item) => {
-    if (item.status === "판매완료") return false;
+    // Show '판매완료' items if they are in the list (meaning not expired yet)
+    // if (item.status === "판매완료") return false; // REMOVED to show sold items
     if (!searchCriteria) return true;
 
     const categoryMatch = searchCriteria.category === "전체보기" || item.category === searchCriteria.category;

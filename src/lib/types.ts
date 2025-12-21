@@ -33,5 +33,5 @@ export interface Notification {
   timestamp: string;
   read: boolean;
   itemId?: number; // Link to the item for actions
-  type?: "trade_request" | "trade_accept" | "trade_complete" | "trade_declined" | "trade_completed";
+  type?: "trade_request" | "trade_accept" | "trade_complete_seller" | "trade_declined" | "trade_review_needed";
 }
