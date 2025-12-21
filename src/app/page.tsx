@@ -538,7 +538,7 @@ export default function Home() {
       }
     }
 
-    alert("거래가 성공적으로 완료되었습니다!");
+    alert("거래 완료 등록에 성공했습니다!");
     setCompletionItemId(null);
     setActiveTab("search"); // Go back to list to see the update
   };

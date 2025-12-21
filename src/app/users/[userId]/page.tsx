@@ -14,6 +14,8 @@ interface Review {
   created_at: string;
   reviewer_name?: string; // We'll fetch this
   reviewer_discord_id?: string;
+  item_name?: string;
+  item_price?: number;
 }
 
 interface UserProfile {
@@ -88,17 +90,26 @@ export default function UserProfilePage() {
           // Ideally we would have a users table, but we use market_items history or just show "Buyer"
           // Let's try to get buyer name from the related market_item
           const reviewsWithNames = await Promise.all(reviewsData.map(async (review) => {
-            const { data: itemData } = await supabase
+            const { data: itemData, error: itemError } = await supabase
               .from('market_items')
-              .select('buyer, buyer_discord_id')
+              .select('buyer, buyer_discord_id, price, items_info(name)')
               .eq('id', review.market_item_id)
               .single();
 
+            if (itemError) {
+              console.error("Error fetching item for review:", review.id, itemError);
+            }
+
             // Note: reviewer_id comes from user_reviews table and is already in 'review' object
+            // items_info is returned as an object or array depending on relationship, usually object for many-to-one
+            const itemName = itemData?.items_info ? (itemData.items_info as any).name : undefined;
+
             return {
               ...review,
               reviewer_name: itemData?.buyer || "구매자",
-              reviewer_discord_id: itemData?.buyer_discord_id
+              reviewer_discord_id: itemData?.buyer_discord_id,
+              item_name: itemName,
+              item_price: itemData?.price
             };
           }));
           setReviews(reviewsWithNames);
@@ -227,6 +238,17 @@ export default function UserProfilePage() {
                       </span>
                     )}
                   </div>
+
+                  {/* Item Info in Review */}
+                  {review.item_name && (
+                    <div className="mb-3 p-2 bg-[#222] rounded border border-[#333] text-sm flex justify-between items-center text-gray-400">
+                      <span className="font-bold text-gray-300">거래 아이템: {review.item_name}</span>
+                      {review.item_price && (
+                        <span>{review.item_price.toLocaleString()}원</span>
+                      )}
+                    </div>
+                  )}
+
                   {review.comment && (
                     <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
                       {review.comment}
