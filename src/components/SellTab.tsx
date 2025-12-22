@@ -110,22 +110,22 @@ export function SellTab({ onRegister, user }: SellTabProps) {
   };
 
   return (
-    <div className="flex flex-1 gap-4 p-4 bg-[#222] text-white overflow-hidden">
+    <div className="flex flex-col lg:flex-row flex-1 gap-8 lg:gap-4 p-4 bg-[#222] text-white overflow-y-auto lg:overflow-hidden min-h-0">
       {/* Search Panel (Left) */}
-      <div className="w-[300px] flex flex-col gap-4 border-r border-[#3d3d3d] pr-4">
+      <div className="w-full lg:w-[300px] flex flex-col gap-4 lg:border-r border-[#3d3d3d] lg:pr-4 shrink-0 min-h-[300px] lg:min-h-0">
         <h2 className="text-lg font-bold text-yellow-500">판매할 아이템 선택</h2>
 
-        <div className="relative">
+        <div className="relative text-sm">
           <Input
             placeholder="아이템 검색..."
-            className="bg-[#333] text-white border-[#444] pl-8 focus:ring-offset-0 focus:ring-1 focus:ring-[oklch(0.6_0.15_240)]"
+            className="bg-[#333] text-white border-[#444] pl-8 focus:ring-offset-0 focus:ring-1 focus:ring-[oklch(0.6_0.15_240)] h-9"
             value={searchTerm}
             onChange={(e) => handleSearch(e.target.value)}
           />
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
         </div>
 
-        <div className="flex-1 overflow-y-auto bg-[#1a1a1a] border border-[#3d3d3d] rounded">
+        <div className="flex-1 overflow-y-auto bg-[#1a1a1a] border border-[#3d3d3d] rounded text-sm min-h-0 max-h-[170px] lg:max-h-none">
           {searchResults.map((item) => (
             <div
               key={item.id}
@@ -135,31 +135,31 @@ export function SellTab({ onRegister, user }: SellTabProps) {
                 ${selectedItem?.id === item.id ? "bg-[#2a3f4a] border-l-4 border-l-[oklch(0.6_0.15_240)]" : ""}
               `}
             >
-              <div className="w-8 h-8 bg-[#2a2a2a] rounded flex items-center justify-center border border-[#444] overflow-hidden">
+              <div className="w-8 h-8 bg-[#2a2a2a] rounded flex items-center justify-center border border-[#444] overflow-hidden shrink-0">
                 {item.image ? (
                   <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
-                ) : <div className="text-[10px] text-gray-500">IMG</div>}
+                ) : <div className="text-[10px] text-gray-500 text-center">IMG</div>}
               </div>
-              <div>
-                <div className="text-white font-bold flex items-center gap-1">
+              <div className="min-w-0">
+                <div className="text-white font-bold flex items-center gap-1 truncate">
                   {item.name}
                   {item.item_gender && (
-                    <span className="text-gray-400 text-xs font-normal">
+                    <span className="text-gray-400 text-[10px] font-normal shrink-0">
                       ({item.item_gender === 'Female' ? '여' : item.item_gender === 'Male' ? '남' : item.item_gender === 'Unisex' ? '공용' : item.item_gender})
                     </span>
                   )}
                 </div>
-                <div className="text-xs text-gray-400">{item.category}</div>
+                <div className="text-[10px] text-gray-400 truncate">{item.category}</div>
               </div>
             </div>
           ))}
           {searchTerm.length > 0 && searchResults.length === 0 && (
-            <div className="p-4 text-center text-gray-500 text-sm">
+            <div className="p-4 text-center text-gray-500 text-xs">
               검색 결과가 없습니다.
             </div>
           )}
           {searchTerm.length === 0 && (
-            <div className="p-4 text-center text-gray-500 text-sm">
+            <div className="p-4 text-center text-gray-500 text-xs">
               아이템 이름을 입력하세요.
             </div>
           )}
@@ -167,63 +167,63 @@ export function SellTab({ onRegister, user }: SellTabProps) {
       </div>
 
       {/* Registration Form (Right) */}
-      <div className="flex-1 flex flex-col gap-6 pl-4 max-w-2xl">
+      <div className="flex-1 flex flex-col gap-6 lg:pl-4 max-w-2xl min-h-0 pb-8 lg:pb-0">
         <h2 className="text-lg font-bold text-yellow-500">판매 정보 입력</h2>
 
-        <div className="bg-[#1a1a1a] p-6 rounded border border-[#3d3d3d] flex flex-col gap-6">
-          <div className="flex gap-4 items-start">
-            <div className="w-24 h-24 bg-[#2a2a2a] border border-[#444] flex items-center justify-center rounded overflow-hidden">
+        <div className="bg-[#1a1a1a] p-4 lg:p-6 rounded border border-[#3d3d3d] flex flex-col gap-6">
+          <div className="flex gap-4 items-center">
+            <div className="w-16 h-16 lg:w-24 lg:h-24 bg-[#2a2a2a] border border-[#444] flex items-center justify-center rounded overflow-hidden shrink-0">
               {selectedItem ? (
                 selectedItem.image ? (
                   <img src={selectedItem.image} alt={selectedItem.name} className="w-full h-full object-contain" />
                 ) : (
-                  <Package className="h-10 w-10 text-white" />
+                  <Package className="h-6 w-6 lg:h-10 lg:w-10 text-white" />
                 )
               ) : (
-                <span className="text-gray-600 text-xs">선택안함</span>
+                <span className="text-gray-600 text-[10px]">선택안함</span>
               )}
             </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-xl font-bold">{selectedItem ? selectedItem.name : "아이템을 선택해주세요"}</span>
-              <span className="text-gray-400 text-sm">{selectedItem ? selectedItem.category : "-"}</span>
+            <div className="flex flex-col gap-1 min-w-0">
+              <span className="text-lg lg:text-xl font-bold truncate">{selectedItem ? selectedItem.name : "아이템을 선택해주세요"}</span>
+              <span className="text-gray-400 text-xs lg:text-sm">{selectedItem ? selectedItem.category : "-"}</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-[100px_1fr] gap-4 items-center">
-            <label className="text-gray-400 font-bold">판매 가격</label>
+          <div className="grid grid-cols-1 md:grid-cols-[100px_1fr] gap-2 md:gap-4 items-center">
+            <label className="text-gray-400 font-bold text-xs lg:text-sm">판매 가격</label>
             <div className="relative">
               <Input
                 type="number"
-                className="bg-[#333] text-white border-[#444] text-right pr-8 font-bold focus:ring-offset-0 focus:ring-1 focus:ring-[oklch(0.6_0.15_240)]"
+                className="bg-[#333] text-white border-[#444] text-right pr-8 font-bold focus:ring-offset-0 focus:ring-1 focus:ring-[oklch(0.6_0.15_240)] h-9 text-sm"
                 placeholder="0"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 disabled={!selectedItem}
               />
-              <span className="absolute right-3 top-2.5 text-gray-400 text-sm">원</span>
+              <span className="absolute right-3 top-2 text-gray-400 text-xs">원</span>
             </div>
 
-            <label className="text-gray-400 font-bold">거래 채널</label>
+            <label className="text-gray-400 font-bold text-xs lg:text-sm">거래 채널</label>
             <Input
-              className="bg-[#333] text-white border-[#444] focus:ring-offset-0 focus:ring-1 focus:ring-[oklch(0.6_0.15_240)] placeholder-gray-500"
+              className="bg-[#333] text-white border-[#444] focus:ring-offset-0 focus:ring-1 focus:ring-[oklch(0.6_0.15_240)] placeholder-gray-500 h-9 text-sm"
               placeholder="예: 1234 (선택사항)"
               value={tradeChannel}
               onChange={(e) => setTradeChannel(e.target.value)}
               disabled={!selectedItem}
             />
 
-            <label className="text-gray-400 font-bold">방 번호</label>
+            <label className="text-gray-400 font-bold text-xs lg:text-sm">방 번호</label>
             <Input
-              className="bg-[#333] text-white border-[#444] focus:ring-offset-0 focus:ring-1 focus:ring-[oklch(0.6_0.15_240)] placeholder-gray-500"
+              className="bg-[#333] text-white border-[#444] focus:ring-offset-0 focus:ring-1 focus:ring-[oklch(0.6_0.15_240)] placeholder-gray-500 h-9 text-sm"
               placeholder="예: 123 (선택사항)"
               value={roomNumber}
               onChange={(e) => setRoomNumber(e.target.value)}
               disabled={!selectedItem}
             />
 
-            <label className="text-gray-400 font-bold">판매 메시지</label>
+            <label className="text-gray-400 font-bold text-xs lg:text-sm">판매 메시지</label>
             <textarea
-              className="bg-[#333] text-white border border-[#444] p-3 rounded h-24 resize-none focus:outline-none focus:border-[oklch(0.6_0.15_240)] placeholder-gray-500 text-sm"
+              className="bg-[#333] text-white border border-[#444] p-3 rounded h-20 resize-none focus:outline-none focus:border-[oklch(0.6_0.15_240)] placeholder-gray-500 text-xs lg:text-sm"
               placeholder="예: 연락주세요, 흥정 가능합니다 (100자 이내)"
               value={tradeMessage}
               onChange={(e) => setTradeMessage(e.target.value.slice(0, 100))}
@@ -233,7 +233,7 @@ export function SellTab({ onRegister, user }: SellTabProps) {
 
           <div className="flex justify-end gap-2 pt-4 border-t border-[#3d3d3d]">
             <Button
-              className="w-32 bg-[oklch(0.6_0.15_240)] hover:bg-[oklch(0.55_0.15_240)] text-white font-bold"
+              className="w-full lg:w-32 bg-[oklch(0.6_0.15_240)] hover:bg-[oklch(0.55_0.15_240)] text-white font-bold h-10"
               disabled={!selectedItem || !price}
               onClick={handleRegister}
             >
@@ -243,7 +243,7 @@ export function SellTab({ onRegister, user }: SellTabProps) {
         </div>
 
         {/* Info Box */}
-        <div className="bg-[#2a2a2a] p-4 text-xs text-gray-400 rounded">
+        <div className="bg-[#2a2a2a] p-4 text-[10px] lg:text-xs text-gray-400 rounded">
           <ul className="list-disc pl-4 space-y-1">
             <li>아이템은 등록 후 24시간 동안 판매됩니다.</li>
             <li>판매 등록한 아이템은 취소할 수 있습니다.</li>
