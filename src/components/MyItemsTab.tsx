@@ -128,9 +128,9 @@ export function MyItemsTab({
   const currentWishlist = myWishlist.slice((wishlistPage - 1) * ITEMS_PER_PAGE, wishlistPage * ITEMS_PER_PAGE);
 
   return (
-    <div className="flex flex-1 gap-4 p-4 bg-[#222] text-white overflow-hidden min-h-0">
+    <div className="flex flex-col lg:flex-row flex-1 gap-8 lg:gap-4 p-4 bg-[#222] text-white overflow-y-auto lg:overflow-hidden min-h-0">
       {/* My Purchase Requests */}
-      <div className="flex-1 flex flex-col gap-4 border-r border-[#3d3d3d] pr-4 min-h-0">
+      <div className="flex-1 flex flex-col gap-4 lg:border-r border-[#3d3d3d] lg:pr-4 min-h-[400px] lg:min-h-0">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-yellow-500 flex items-center gap-2">
             <Package className="h-5 w-5" /> 내 구매 요청 목록
@@ -207,7 +207,7 @@ export function MyItemsTab({
       </div>
 
       {/* My Sales */}
-      <div className="flex-1 flex flex-col gap-4 border-r border-[#3d3d3d] pr-4 min-h-0">
+      <div className="flex-1 flex flex-col gap-4 lg:border-r border-[#3d3d3d] lg:pr-4 min-h-[400px] lg:min-h-0">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-green-500 flex items-center gap-2">
             <CheckCircle className="h-5 w-5" /> 내 판매 목록
@@ -219,7 +219,7 @@ export function MyItemsTab({
             onPageChange={setSalesPage}
           />
         </div>
-        <div className="flex-1 overflow-y-auto bg-[#1a1a1a] border border-[#3d3d3d] rounded p-2 text-sm">
+        <div className="flex-1 overflow-y-auto bg-[#1a1a1a] border border-[#3d3d3d] rounded p-2 text-sm min-h-0">
           {mySales.length === 0 ? (
             <div className="text-center text-gray-500 mt-10">판매 등록한 아이템이 없습니다.</div>
           ) : (
@@ -288,7 +288,7 @@ export function MyItemsTab({
       </div>
 
       {/* My Wishlist */}
-      <div className="flex-1 flex flex-col gap-4">
+      <div className="flex-1 flex flex-col gap-4 min-h-[400px] lg:min-h-0 pb-8 lg:pb-0">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-red-500 flex items-center gap-2">
             <Heart className="h-5 w-5 fill-current" /> 찜 목록
