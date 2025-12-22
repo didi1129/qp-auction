@@ -2,7 +2,8 @@
 
 import { useEffect, useState, use } from "react";
 import { supabase } from "@/lib/supabase";
-import { Item } from "@/lib/types";
+import { Item, MarketItemRow, MarketItemRow as ItemWithInfo } from "@/lib/types";
+import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Info, Package, MessageSquare } from "lucide-react";
@@ -22,7 +23,7 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
   const resolvedParams = use(params);
   const [item, setItem] = useState<Item | null>(null);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [buyerMessage, setBuyerMessage] = useState("");
@@ -57,7 +58,8 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
       if (error) {
         console.error("Error fetching item:", error);
       } else {
-        const itemInfo = data.items_info;
+        const row = data as MarketItemRow;
+        const itemInfo = row.items_info;
         const mappedItem: Item = {
           id: data.id,
           name: itemInfo?.name || "알 수 없는 아이템",

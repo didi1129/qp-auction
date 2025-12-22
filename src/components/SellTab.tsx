@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Package, Clock } from "lucide-react";
-import { Item } from "@/lib/types";
+import { Item, ItemInfoRow } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
 
 import { User } from "@supabase/supabase-js";
@@ -16,8 +16,8 @@ interface SellTabProps {
 
 export function SellTab({ onRegister, user }: SellTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const [searchResults, setSearchResults] = useState<ItemInfoRow[]>([]);
+  const [selectedItem, setSelectedItem] = useState<ItemInfoRow | null>(null);
   const [price, setPrice] = useState("");
   const [tradeMessage, setTradeMessage] = useState("");
   const [tradeChannel, setTradeChannel] = useState("");
@@ -40,7 +40,7 @@ export function SellTab({ onRegister, user }: SellTabProps) {
       console.error(error);
     } else {
       console.log("SellTab search results:", data);
-      setSearchResults(data || []);
+      setSearchResults((data as ItemInfoRow[]) || []);
     }
   };
 

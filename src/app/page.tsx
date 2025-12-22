@@ -9,9 +9,14 @@ import { Search } from "lucide-react";
 import { SellTab } from "@/components/SellTab";
 import { MyItemsTab } from "@/components/MyItemsTab";
 import { MOCK_ITEMS } from "@/lib/constants";
-import { Item, Notification } from "@/lib/types";
+import { Item, Notification, NotificationRow, WishlistRow, MarketItemRow, MarketPriceHistoryRow } from "@/lib/types";
 import { useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+
+interface DiscordIdentity {
+  provider: string;
+  id: string;
+}
 
 import { CompleteTab } from "@/components/CompleteTab";
 import { MarketPriceTab } from "@/components/MarketPriceTab";
@@ -71,7 +76,7 @@ export default function Home() {
       return;
     }
 
-    const discordId = user.identities?.find((id: any) => id.provider === 'discord')?.id;
+    const discordId = user.identities?.find((id) => id.provider === 'discord')?.id;
     if (!discordId) return;
 
     const fetchNotifications = async () => {
@@ -83,7 +88,8 @@ export default function Home() {
         .order('created_at', { ascending: false });
 
       if (data) {
-        const mappedNotifs: Notification[] = data.map((n: any) => ({
+        const rowData = data as NotificationRow[];
+        const mappedNotifs: Notification[] = rowData.map((n) => ({
           id: n.id.toString(),
           message: n.message,
           timestamp: n.created_at,
@@ -98,9 +104,10 @@ export default function Home() {
         setNotifications(mappedNotifs);
 
         // Auto-update item status to '판매완료' if we receive a completion notification
-        const completedItemIds = data
-          .filter((n: any) => n.result_code === 'trade_completed')
-          .map((n: any) => n.item_id);
+        const completedItemIds = rowData
+          .filter((n) => n.result_code === 'trade_completed')
+          .map((n) => n.item_id)
+          .filter((id): id is number => id !== undefined);
 
         if (completedItemIds.length > 0) {
           setItems(prevItems => prevItems.map(item => {
@@ -138,7 +145,8 @@ export default function Home() {
         .eq('user_id', user.id);
 
       if (data) {
-        setWishlistIds(data.map((w: any) => w.item_id));
+        const wishlistData = data as WishlistRow[];
+        setWishlistIds(wishlistData.map((w) => w.item_id));
       }
     };
 
@@ -158,7 +166,8 @@ export default function Home() {
       } else if (data && data.length > 0) {
         // Map backend structure to Frontend Item type
         const expiredIds: number[] = [];
-        const rawMapped = data.map((item: any) => {
+        const marketData = data as MarketItemRow[];
+        const rawMapped = marketData.map((item) => {
           const itemInfo = item.items_info;
           if (!itemInfo) return null;
 
@@ -264,7 +273,8 @@ export default function Home() {
         }
 
         if (data) {
-          const mappedHistory: Item[] = data.map((h: any) => ({
+          const historyData = data as MarketPriceHistoryRow[];
+          const mappedHistory: Item[] = historyData.map((h) => ({
             id: h.id,
             name: h.name,
             category: h.category,
@@ -306,7 +316,8 @@ export default function Home() {
     }
 
     // Fallback Legacy Check (if needed, but UUID is safer if populated)
-    // const discordId = user.identities?.find((id: any) => id.provider === 'discord')?.id;
+    const discordIdentities = user.identities as DiscordIdentity[] | undefined;
+    // const discordId = discordIdentities?.find((id) => id.provider === 'discord')?.id;
     // if (item.seller_discord_id === discordId) { ... } 
     // ^ This legacy check might fail if seller_discord_id is now username. 
     // We trust UUID check.
@@ -319,7 +330,8 @@ export default function Home() {
     const buyerNickname = globalName || username;
     const discordHandle = username;
 
-    const discordId = user.identities?.find((id: any) => id.provider === 'discord')?.id; // Still need Snowflake for internal/logging if needed? or just use handle.
+    const discordIdentitiesForPurchase = user.identities as DiscordIdentity[] | undefined;
+    const discordId = discordIdentitiesForPurchase?.find((id) => id.provider === 'discord')?.id; // Still need Snowflake for internal/logging if needed? or just use handle.
 
     // Update Item Status in DB
     const { error: updateError } = await supabase

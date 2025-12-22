@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ThumbsUp, ThumbsDown, Star, User } from "lucide-react";
+import { ItemInfoRow, MarketItemRow, ReviewRow } from "@/lib/types";
 
 interface Review {
   id: number;
@@ -90,7 +91,8 @@ export function UserProfileViewer({ userId, avatarUrl }: UserProfileViewerProps)
 
         if (reviewsData && reviewsData.length > 0) {
           // 3. Fetch Reviewer Names (manual join with market_items)
-          const reviewsWithNames = await Promise.all(reviewsData.map(async (review) => {
+          const typedReviewsData = reviewsData as ReviewRow[];
+          const reviewsWithNames = await Promise.all(typedReviewsData.map(async (review) => {
             const { data: itemData, error: itemError } = await supabase
               .from('market_items')
               .select('buyer, buyer_discord_id, price, items_info(name)')
@@ -101,14 +103,15 @@ export function UserProfileViewer({ userId, avatarUrl }: UserProfileViewerProps)
               console.error("Error fetching item for review:", review.id, itemError);
             }
 
-            const itemName = itemData?.items_info ? (itemData.items_info as any).name : undefined;
+            const typedItemData = itemData as (MarketItemRow & { items_info: { name: string } }) | null;
+            const itemName = typedItemData?.items_info?.name;
 
             return {
               ...review,
-              reviewer_name: itemData?.buyer || "구매자",
-              reviewer_discord_id: itemData?.buyer_discord_id,
+              reviewer_name: typedItemData?.buyer || "구매자",
+              reviewer_discord_id: typedItemData?.buyer_discord_id,
               item_name: itemName,
-              item_price: itemData?.price
+              item_price: typedItemData?.price
             };
           }));
           setReviews(reviewsWithNames);
