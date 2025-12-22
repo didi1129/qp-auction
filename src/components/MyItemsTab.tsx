@@ -1,9 +1,6 @@
 "use client";
 
 import { PaginationControls } from "@/components/PaginationControls";
-
-
-
 import { Item } from "@/lib/types";
 import { formatRelativeTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -191,7 +188,7 @@ export function MyItemsTab({
                   </div>
                   {item.trade_message && (
                     <div className="text-blue-400 leading-tight italic line-clamp-1">
-                      "{item.trade_message}"
+                      &quot;{item.trade_message}&quot;
                     </div>
                   )}
                   {item.status === '판매완료' && item.sold_at && (
@@ -262,7 +259,7 @@ export function MyItemsTab({
                 <div className="flex flex-col gap-1 px-1 py-1 bg-[#1a1a1a]/50 rounded text-[11px]">
                   {item.trade_message && (
                     <div className="text-blue-400 leading-tight italic line-clamp-1">
-                      "{item.trade_message}"
+                      &quot;{item.trade_message}&quot;
                     </div>
                   )}
                   <div className="flex gap-1 items-center text-gray-400">
@@ -361,7 +358,7 @@ export function MyItemsTab({
                   </div>
                   {item.trade_message && (
                     <div className="text-blue-400 leading-tight italic line-clamp-2">
-                      "{item.trade_message}"
+                      &quot;{item.trade_message}&quot;
                     </div>
                   )}
                 </div>
