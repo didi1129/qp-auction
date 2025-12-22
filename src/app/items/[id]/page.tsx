@@ -34,6 +34,19 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
       setUser(session?.user ?? null);
     };
 
+    const calculateTimeLeft = (createdAtStr: string) => {
+      const createdAt = new Date(createdAtStr);
+      const expireTime = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000);
+      const now = new Date();
+      const diffMs = expireTime.getTime() - now.getTime();
+
+      if (diffMs <= 0) return "만료됨";
+
+      const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      return `${diffHrs}시간 ${diffMins}분`;
+    };
+
     const fetchItem = async () => {
       const { data, error } = await supabase
         .from('market_items')
@@ -52,7 +65,7 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
           level: itemInfo?.level || 0,
           category: itemInfo?.category || "일반",
           count: data.count,
-          timeLeft: data.timeLeft,
+          timeLeft: calculateTimeLeft(data.created_at),
           isNew: data.isNew,
           image: itemInfo?.image,
           seller: data.seller,
