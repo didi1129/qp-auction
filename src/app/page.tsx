@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Header } from "@/components/Header";
 import { Sidebar } from "@/components/Sidebar";
 import { ItemTable } from "@/components/ItemTable";
+import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
 import { SellTab } from "@/components/SellTab";
 import { MyItemsTab } from "@/components/MyItemsTab";
 import { MOCK_ITEMS } from "@/lib/constants";
@@ -19,6 +21,7 @@ import { User } from "@supabase/supabase-js";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("search");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Cast MOCK_ITEMS to Item[] to ensure compatibility
   const [items, setItems] = useState<Item[]>(MOCK_ITEMS as Item[]);
@@ -160,7 +163,6 @@ export default function Home() {
           if (!itemInfo) return null;
 
           // Calculate time left (24 hours from created_at)
-          console.log("Mapping item:", item.id, "Info:", itemInfo);
           const createdAt = new Date(item.created_at);
           const expireTime = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000);
           const now = new Date();
@@ -754,9 +756,38 @@ export default function Home() {
           }}
         />
       ) : activeTab === "search" ? (
-        <div className="flex flex-1 overflow-hidden">
-          <Sidebar onSearch={handleSearch} />
+        <div className="flex flex-1 overflow-hidden relative">
+          {/* Mobile Overlay */}
+          {isSidebarOpen && (
+            <div
+              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+              onClick={() => setIsSidebarOpen(false)}
+            />
+          )}
+
+          <div className={`
+            fixed lg:relative inset-y-0 left-0 z-50 transform lg:transform-none transition-transform duration-300 ease-in-out
+            ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+          `}>
+            <Sidebar onSearch={(cat, key, min, max) => {
+              handleSearch(cat, key, min, max);
+              setIsSidebarOpen(false);
+            }} />
+          </div>
+
           <main className="flex-1 flex flex-col min-w-0 bg-[#222]">
+            {/* Sidebar Toggle Button for Mobile */}
+            <div className="lg:hidden p-2 bg-[#1a1a1a] border-b border-[#3d3d3d] flex items-center">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-gray-400 border-[#3d3d3d] hover:bg-[#333] gap-2 h-8 px-3"
+                onClick={() => setIsSidebarOpen(true)}
+              >
+                <Search className="h-4 w-4" /> 상세 검색
+              </Button>
+            </div>
+
             <ItemTable
               items={filteredItems}
               onPurchaseRequest={handlePurchaseRequest}
